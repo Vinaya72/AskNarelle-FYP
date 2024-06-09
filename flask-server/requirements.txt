@@ -1,0 +1,13 @@
+langchain
+openai
+python-dotenv
+azure-storage-blob
+unstructured[all-docs]
+langchain_openai
+azure-identity
+azure-search-documents
+langchain-community
+Flask
+langchain-openai
+flask-cors
+pymongo
