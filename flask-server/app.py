@@ -4,8 +4,10 @@ from flask_cors import CORS
 from langchain_openai import AzureOpenAIEmbeddings
 from langchain_community.document_loaders import AzureBlobStorageContainerLoader
 from langchain.text_splitter import CharacterTextSplitter
-from mongo_helper import create_collection, create_document, drop_collection, delete_document, get_collections, get_documents
+from langchain.docstore.document import Document
+from mongo_helper import create_collection, create_document, drop_collection, delete_document, get_collections, get_documents, update_movement_document, get_chatlogs
 from blob_storage_helper import createContainer, delete_blob_storage_container, upload_to_azure_blob_storage, delete_from_azure_blob_storage, generate_sas_token
+from common_helper import read_docx, read_pdf
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
@@ -14,6 +16,8 @@ from dotenv import load_dotenv
 import uuid
 from pathlib import Path
 from azure.storage.blob import BlobServiceClient
+from datetime import datetime
+import pytz
 
 load_dotenv()
 
@@ -29,11 +33,12 @@ embeddings = AzureOpenAIEmbeddings(
         )
 blob_service_client = BlobServiceClient.from_connection_string(os.environ.get('AZURE_CONN_STRING'))
 
-@app.route("/vectorstore", methods=['POST'])
-def StoreDocuments():
+@app.route("/vectorstore", methods=['PUT'])
+def storeDocuments():
     data = request.json
     containername = data.get('containername')
-
+    chunksize= int(data.get('chunksize'))
+    overlap = int(data.get('overlap'))
     if not containername:
         return jsonify({"error": "Container name is required"}), 400
     
@@ -59,9 +64,8 @@ def StoreDocuments():
                  container= containername,
                  prefix='new/'
         )
-        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+        text_splitter = CharacterTextSplitter(chunk_size=chunksize, chunk_overlap=overlap)
         documents = loader.load()
-
 
         for doc in documents:
             path_to_check = doc.metadata['source']
@@ -94,6 +98,110 @@ def StoreDocuments():
             path_to_add = doc.metadata['source']
             filename_to_add = Path(path_to_add).name
             docs_to_add_filename.append(filename_to_add)
+            docs_to_add_page_content.append(doc.page_content)
+
+        docs_to_update_embeddings = embeddings.embed_documents(docs_to_update_page_content)
+        docs_to_add_embeddings = embeddings.embed_documents(docs_to_add_page_content)
+
+        if(len(docs_to_update_page_content) != 0):
+            for i in range(len(docs_to_update_page_content)):
+                docs_to_update_final.append({
+                    'id': docs_to_update_id[i],
+                    'content': docs_to_update_page_content[i],
+                    'content_vector': docs_to_update_embeddings[i],
+                    'filename': docs_to_update_filename[i]
+                })
+
+            search_client.merge_documents(docs_to_update_final)
+
+        if(len(docs_to_add_page_content) != 0):
+            for i in range(len(docs_to_add_page_content)):
+                docs_to_add_final.append({
+                    'id': str(uuid.uuid4()),
+                    'content': docs_to_add_page_content[i],
+                    'content_vector': docs_to_add_embeddings[i],
+                    'filename': docs_to_add_filename[i]
+                })
+
+            search_client.upload_documents(docs_to_add_final)
+
+        return jsonify({"message": "Data loaded into vectorstore successfully"}), 201
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/movetovectorstore", methods=['PUT'])
+def moveToVectorStore():
+    data = request.json
+    containername = data.get('containername')
+    domainname = data.get('domainname')
+    versionid = data.get('versionid')
+    chunksize= int(data.get('chunksize'))
+    overlap = int(data.get('overlap'))
+    filename = data.get('filename')
+    if not containername:
+        return jsonify({"error": "Container name is required"}), 400
+    
+    docs_to_add = []
+    docs_to_update = []
+    docs_to_update_id = []
+    
+    docs_to_add_final= []
+    docs_to_add_page_content = []
+    docs_to_add_embeddings = []
+    docs_to_add_filename = []
+
+    docs_to_update_final = []
+    docs_to_update_page_content = []
+    docs_to_update_embeddings = []
+    docs_to_update_filename = []
+
+    try:   
+        search_client = SearchClient(endpoint=os.environ.get('AZURE_COGNITIVE_SEARCH_ENDPOINT'), index_name=containername, credential=AzureKeyCredential(os.environ.get('AZURE_COGNITIVE_SEARCH_API_KEY')))
+
+        text_splitter = CharacterTextSplitter(chunk_size=chunksize, chunk_overlap=overlap)
+   
+
+        blob_client = blob_service_client.get_blob_client(container=containername, blob=f"{domainname}/{filename}", version_id=versionid)
+
+        blob_content = blob_client.download_blob().readall()
+
+        if(filename.endswith('.pdf')):
+            page_content = read_pdf(blob_content)
+        elif filename.endswith('.docx'):
+            page_content = read_docx(blob_content)
+        else:
+            return jsonify({"error": "not a valid file"}), 500
+        doc = Document(page_content= page_content, metadata={"source": filename})
+
+        filename_to_check = doc.metadata["source"]
+        search_results = search_client.search(filter=f"filename eq '{filename_to_check}'")
+        first_result = next(search_results, None)
+        if first_result is not None:
+                search_results = search_client.search(filter=f"filename eq '{filename_to_check}'")
+                print("update!")
+                for result in search_results:
+                    print(result['filename'])
+                    docs_to_update_id.append(result['id'])
+                        
+                split_docs_to_update = text_splitter.split_documents([doc])
+                for sdoc in split_docs_to_update:
+                    docs_to_update.append(sdoc)                    
+        else:
+            print("add!")
+            split_docs_to_add = text_splitter.split_documents([doc])
+            for adoc in split_docs_to_add:
+                docs_to_add.append(adoc)    
+
+        for doc in docs_to_update:
+            path_to_update = doc.metadata['source']
+            docs_to_update_filename.append(path_to_update)
+            docs_to_update_page_content.append(doc.page_content)
+        
+        for doc in docs_to_add:
+            path_to_add = doc.metadata['source']
+            docs_to_add_filename.append(path_to_add)
             docs_to_add_page_content.append(doc.page_content)
 
         docs_to_update_embeddings = embeddings.embed_documents(docs_to_update_page_content)
@@ -212,26 +320,48 @@ def get_containers():
     collections =  get_collections()
     return jsonify(collections), 201
 
-@app.route('/api/collections/<collection_name>', methods=['GET'])
-def get_files(collection_name):
-    documents = get_documents(collection_name)
+@app.route('/api/collections/<collection_name>/<domain_name>', methods=['GET'])
+def get_files(collection_name, domain_name):
+    documents = get_documents(collection_name, domain_name)
     return jsonify(documents), 201
    
     
-@app.route('/api/<collection_name>/createdocument', methods=['PUT'])
-def upload_document(collection_name):
+@app.route('/api/<collection_name>/<domain_name>/createdocument', methods=['PUT'])
+def upload_document(collection_name, domain_name):
     files = request.files.getlist('files')
     container_name = collection_name.lower().replace(' ', '-')
     files_with_links = []
     try:
-        upload_success = upload_to_azure_blob_storage(container_name, files)
+        now_utc = datetime.now(pytz.utc)
+        container_client = blob_service_client.get_container_client(collection_name)
+        upload_success = upload_to_azure_blob_storage(container_name, files, domain_name)
         if upload_success:
             for file in files:
-                sas_token = generate_sas_token(collection_name, file.filename)
-                blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{file.filename}?{sas_token}"
+                blob_client_direct = container_client.get_blob_client(f"{domain_name}/{file.filename}")
+                blob_version = blob_client_direct.get_blob_properties().version_id
+                main_part, fractional_part = blob_version[:-1].split('.')
+                fractional_part = fractional_part[:6] 
+                adjusted_timestamp_str = f"{main_part}.{fractional_part}Z"
+                timestamp_dt = datetime.strptime(adjusted_timestamp_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+                date_str = timestamp_dt.date().isoformat()
+                time_str = timestamp_dt.time().isoformat()
+                print(date_str)
+                print(time_str)
+
+                print(f"this is blob version: {blob_version}")
+                sas_token = generate_sas_token(collection_name, f'{domain_name}/{file.filename}')
+                blob_url = f"https://{blob_service_client.account_name}.blob.core.windows.net/{container_name}/{f'{domain_name}/{file.filename}'}?{sas_token}"
                 files_with_links.append({
                     "name": file.filename,
-                    "url": blob_url
+                    "url": blob_url,
+                    "blob_name": f'{domain_name}/{file.filename}',
+                    "domain": domain_name,
+                    "version_id": blob_version,
+                    "date_str": date_str,
+                    "time_str": time_str,
+                    "in_vector_store": 'yes',
+                    "is_root_blob": 'yes'
                 })
             create_document_success = create_document(collection_name, files_with_links)
             if create_document_success:
@@ -268,16 +398,18 @@ def delete_course():
         return jsonify({'error': 'Internal server error'}), 500
 
 
-@app.route('/api/<collection_name>/deletedocument', methods=['DELETE'])
-def delete_file(collection_name):
+@app.route('/api/<collection_name>/<domain_name>/deletedocument', methods=['DELETE'])
+def delete_file(collection_name, domain_name):
     data = request.json
     file_name = data.get('fileName')
     file_id = data.get('_id')
+    version_id = data.get('versionId')
+    is_root_blob = data.get('isRootBlob')
     container_name = collection_name.lower().replace(' ', '-')
     try:
-        delete_success = delete_from_azure_blob_storage(container_name, file_name)
+        delete_success = delete_from_azure_blob_storage(container_name, file_name, domain_name, version_id, is_root_blob)
         if delete_success:
-            delete_document_success =  delete_document(collection_name, file_id)
+            delete_document_success =  delete_document(collection_name, file_id, is_root_blob, file_name)
             if delete_document_success:
                  print("document deleted successfully!")
                  return jsonify({"message": "Document deleted successfully!"}), 201
@@ -293,6 +425,7 @@ def delete_file(collection_name):
 def DeleteEmbeddings(collection_name):
     data = request.json
     blobName = data.get('fileName')
+    
     search_client = SearchClient(os.environ.get('AZURE_COGNITIVE_SEARCH_ENDPOINT'), collection_name, AzureKeyCredential(os.environ.get('AZURE_COGNITIVE_SEARCH_API_KEY')))
     try: 
         print(blobName)     
@@ -323,6 +456,32 @@ def delete_index():
     except Exception as e:
         print(f"An error occurred: {e}")
         return jsonify({"error": str(e)}), 500
+    
+@app.route('/updatemovement', methods=['PUT'])
+def update_movement():
+    data = request.json
+    collection_name = data.get('collectionName')
+    domain_name = data.get('domainName')
+    file_name = data.get('fileName')
+    version_id = data.get('versionId')
+    try:
+        create_document_success = update_movement_document(collection_name, file_name, version_id)
+        if create_document_success:
+            print("documents created successfully!")
+            return jsonify({"message": "Documents created successfully!"}), 201
+        else:
+            return jsonify({'error': 'Failed to create documents'}), 500
+        
+    except Exception as error:
+            print(f"Error processing files upload: {error}")
+            return jsonify({'error': 'Internal server error'}), 500
+
+@app.route('/get-chats', methods=['GET'])
+def get_chats():
+    chats = get_chatlogs()
+    print(chats)
+    return jsonify(chats), 201
+
 
 
 if __name__ == "__main__":

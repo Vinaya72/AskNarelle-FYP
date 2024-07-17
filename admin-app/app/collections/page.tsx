@@ -8,25 +8,41 @@ import { useSearchParams } from 'next/navigation';
 import FileCard from '../components/FileCard';
 import { CiSearch } from "react-icons/ci";
 import FileDeletionPopup from '../components/FileDeletionPopup';
+import FileMovementPopup from '../components/FileMovementPopup';
+import BlobDeletionPopup from '../components/BlobDeletionPopup';
+import { Suspense } from 'react';
+import FilesTable from '../components/FilesTable';
 
 interface Document{
     _id: string;
     file: string;
-    url: string
+    url: string;
+    version_id: string;
+    date_str: string;
+    time_str: string;
+    in_vector_store: string;
+    is_root_blob: string
 }
-const FilesList: React.FC = () => {
+function Fileslist(): JSX.Element{
     const [message, setMessage] = useState<Document[]>([]);
     const [showPopup, setShowPopup] = useState<boolean>(false);
     const [fileCreated, setFileCreated] = useState<boolean>(true); 
     const [fileDeleted, setFileDeleted] = useState<boolean>(true); 
+    const [fileMoved, setFileMoved] = useState<boolean>(true);
+    const [blobDeleted, setBlobDeleted] = useState<boolean>(true);
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [showDeletionPopup, setShowDeletionPopup] = useState<boolean>(false);
+    const [showFileMovementPopup, setShowFileMovementPopup] = useState<boolean>(false);
+    const [showBlobDeletionPopup, setShowBlobDeletionPopup] = useState<boolean>(false);
     const[fileName, setFileName] = useState<string>('');
     const[collection, setCollection] = useState<string>('');
     const[docId, setDocId] = useState<string>('');
+    const[versionId, setVersionId] = useState<string>('');
+    const[isRootBlob, setIsRootBlob] = useState<string>('');
 
     const searchParams = useSearchParams();
-    const collectionName = searchParams.get("query") || '';
+    const collectionName = searchParams.get("course") || '';
+    const domainName = searchParams.get("domain") || '';
   
     const handleFileCreated = () => {
       setFileCreated(!fileCreated);
@@ -35,6 +51,14 @@ const FilesList: React.FC = () => {
     const handleFileDeleted = () => {
       setFileDeleted(!fileDeleted);
     };
+
+    const handleFileMoved = () => {
+      setFileMoved(!fileMoved)
+    }
+
+    const handleBlobDeleted = () => {
+      setBlobDeleted(!blobDeleted)
+    }
   
     const handleButtonClick = (): void => {
       setShowPopup(true);
@@ -48,21 +72,48 @@ const FilesList: React.FC = () => {
       setSearchQuery(event.target.value);
     };
 
-    const handlePressDelete = (id: string, collection: string, file: string) => {
+    const handlePressDelete = (id: string, collection: string, file: string, version_id: string, is_root_blob: string) => {
        setFileName(file);
        setCollection(collection);
        setDocId(id);
        setShowDeletionPopup(true)
+       setVersionId(version_id)
+       setIsRootBlob(is_root_blob)
     }
+
+    const handlePressMovement = (id: string, collection: string, file: string, version_id: string) => {
+      setFileName(file);
+      setCollection(collection);
+      setDocId(id);
+      setShowFileMovementPopup(true)
+      setVersionId(version_id)
+   }
+
+   const handlePressBlobDelete = (id: string, collection: string, file: string, version_id: string, is_root_blob: string) => {
+    setFileName(file);
+    setCollection(collection);
+    setDocId(id);
+    setShowBlobDeletionPopup(true)
+    setVersionId(version_id)
+    setIsRootBlob(is_root_blob)
+ }
 
     const handleCloseDeletionPopup = (): void => {
       setShowDeletionPopup(false);
     }
 
+    const handleCloseFileMovementPopup = (): void => {
+      setShowFileMovementPopup(false);
+    }
+
+    const handleCloseBlobDeletePopup = (): void => {
+      setShowBlobDeletionPopup(false);
+    }
+
   
     useEffect(() => {
       // console.log("Document");
-        fetch(`http://localhost:5000/api/collections/${collectionName}`)
+        fetch(`https://flask-backend-deployment.azurewebsites.net/api/collections/${collectionName}/${domainName}`)
         .then(response => {
           if (!response.ok) {
             throw new Error('Failed to fetch collections');
@@ -75,7 +126,7 @@ const FilesList: React.FC = () => {
         .catch(error => {
           console.error('Error fetching collections:', error);
         });
-    }, [fileCreated, fileDeleted]); 
+    }, [fileCreated, fileDeleted, collectionName, blobDeleted, fileMoved]); 
 
     const filteredFiles = message.filter(document =>
       document.file.toLowerCase().includes(searchQuery.toLowerCase())
@@ -106,7 +157,7 @@ const FilesList: React.FC = () => {
              <CiSearch size={35}/> 
         </div>
         <div className="flex flex-col mt-5 justify-center items-center overflow-scroll">
-          {filteredFiles.map((document: Document, index: number) => (
+          {/* {filteredFiles.map((document: Document, index: number) => (
             <FileCard
               key={index}
               fileName={document.file}
@@ -114,8 +165,16 @@ const FilesList: React.FC = () => {
               id={document._id}
               onFileDeleted={handlePressDelete}
               url = {document.url}
+              date={document.date_str}
+              time={document.time_str}
+              version_id={document.version_id}
+              in_vector_store={document.in_vector_store}
+              is_root_blob={document.is_root_blob}
+              onFileMoved={handlePressMovement}
+              onBlobDeleted={handlePressBlobDelete}
             />
-          ))}
+          ))} */}
+           <FilesTable files={filteredFiles} collectionName={collectionName} onFileDeleted={handlePressDelete} onFileMoved={handlePressMovement} onBlobDeleted={handlePressBlobDelete}/>
         </div>
         </>
       ) : (
@@ -132,11 +191,18 @@ const FilesList: React.FC = () => {
           </div>
         </div>
       )}
-        {showPopup && <DocumentPopup onClose={handleClosePopup} onFileCreated={handleFileCreated} collectionName = {collectionName}/>}
-        {showDeletionPopup && <FileDeletionPopup fileName={fileName} collectionName={collection} id={docId} onFileDeleted={handleFileDeleted} onClose={handleCloseDeletionPopup}/>}
-  
+        {showPopup && <DocumentPopup onClose={handleClosePopup} onFileCreated={handleFileCreated} collectionName = {collectionName} domainName={domainName}/>}
+        {showDeletionPopup && <FileDeletionPopup fileName={fileName} collectionName={collection} id={docId} onFileDeleted={handleFileDeleted} onClose={handleCloseDeletionPopup} domainName={domainName} version_id={versionId} is_root_blob={isRootBlob}/>}
+        {showFileMovementPopup && <FileMovementPopup fileName={fileName} collectionName={collection} id={docId} onFileMoved={handleFileMoved} onClose={handleCloseFileMovementPopup} domainName={domainName} version_id={versionId}/>}
+        {showBlobDeletionPopup && <BlobDeletionPopup fileName={fileName} onBlobDeleted={handleBlobDeleted} id={docId} collectionName={collection} onClose={handleCloseBlobDeletePopup} domainName={domainName} version_id={versionId} is_root_blob={isRootBlob}/>}
       </main>
     );
 };
 
-export default FilesList;
+export default function FilePage(): JSX.Element {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Fileslist />
+    </Suspense>
+  );
+}

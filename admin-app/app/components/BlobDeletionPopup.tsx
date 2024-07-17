@@ -1,23 +1,23 @@
 import { useState } from 'react';
 import { Oval } from 'react-loader-spinner';
 
-interface FileDeletionPopupProps {
+interface BlobDeletionPopupProps {
     fileName: string,
     collectionName: string,
     domainName: string,
     id: string,
     version_id: string,
     is_root_blob: string,
-    onFileDeleted: () => void;
+    onBlobDeleted: () => void;
     onClose: () => void
 }
 
-const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collectionName, id, onFileDeleted, onClose, domainName, version_id, is_root_blob}) => {
+const BlobDeletionPopup: React.FC<BlobDeletionPopupProps> = ({fileName, collectionName, id, onBlobDeleted, onClose, domainName, version_id, is_root_blob}) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const handleDelete = () => {
+  const handleBlobDelete = () => {
     setIsLoading(true);
-    fetch(`https://flask-backend-deployment.azurewebsites.net/api/${collectionName}/deleteembeddings`, {
+    fetch(`https://flask-backend-deployment.azurewebsites.net/api/${collectionName}/${domainName}/deletedocument`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -25,28 +25,11 @@ const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collecti
       body: JSON.stringify(
         { 
         _id: id, 
-        fileName: fileName }
-        ),
-    })
-    .then(response => {
-      if (response.status === 201) {
-        return fetch(`https://flask-backend-deployment.azurewebsites.net/api/${collectionName}/${domainName}/deletedocument`, {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(
-              { 
-              _id: id, 
-              fileName: fileName,
-              versionId : version_id,
-              isRootBlob: is_root_blob 
-            }
-              ),
-          });
-      } else if(!response.ok) {
-        console.error('Failed to delete document');
+        fileName: fileName,
+        versionId : version_id,
+        isRootBlob: is_root_blob  
       }
+        ),
     })
     .catch(error => {
       console.error('Error deleting document:', error);
@@ -54,7 +37,7 @@ const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collecti
     .finally(() => {
         setIsLoading(false);
         onClose();
-        onFileDeleted();
+        onBlobDeleted();
     });
 
   }
@@ -81,18 +64,18 @@ const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collecti
         {
           !isLoading && (
             <>
-            { (is_root_blob !== "yes") ? 
-            (<p className='font-semibold text-lg'>Are you sure you want to delete this file?</p>) :
-
-            (<>
-            <p className='font-semibold text-lg'>Are you sure you want to delete this file?</p>
-             <p className='text-red-500'>warning: As this the root file, deleting this file will delete all other versions of this file is they exsist</p>
-             </>
-           )
+             { (is_root_blob === "yes") ? 
+              (<>
+                <p className='font-semibold text-lg'>Are you sure you want to delete this file?</p>
+                 <p className='text-red-500'>warning: As this the root file, deleting this file will delete all other versions of this file is they exsist</p>
+                 </>
+               ):
+               (<p className='font-semibold text-lg'>Are you sure you want to delete this file from file storage?</p>) 
+           
             }
         <div className='flex w-1/2'>
         <button
-        onClick={handleDelete}
+        onClick={handleBlobDelete}
         className="bg-[#2C3463] text-white font-bold py-2 px-4 rounded mr-5 mt-5 w-2/5 transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-[#3C456C]"
         >
         Yes
@@ -114,4 +97,4 @@ const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collecti
   );
 };
 
-export default FileDeletionPopup;
+export default BlobDeletionPopup;

@@ -1,7 +1,7 @@
 from azure.storage.blob import BlobServiceClient,generate_blob_sas, BlobSasPermissions
 import os
-from urllib.parse import quote
 from datetime import datetime, timedelta
+
 
 
 connection_string = os.environ.get('AZURE_CONN_STRING')
@@ -9,6 +9,7 @@ storage_account_name = "sc1015filestorage"
 storage_account_key = os.environ.get('AZURE_STORAGE_KEY')
 
 blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+
 
 def createContainer(containerName):
     try:
@@ -29,7 +30,7 @@ def delete_blob_storage_container(containerName):
         print(f"Error deleting container: {error}")
         return False
     
-def upload_to_azure_blob_storage(containerName, files):
+def upload_to_azure_blob_storage(containerName, files, domainName):
     try:
         container_client = blob_service_client.get_container_client(containerName)
 
@@ -48,7 +49,8 @@ def upload_to_azure_blob_storage(containerName, files):
             print(f"File uploaded successfully to folder. Request ID: {upload_response1['request_id']}")
             
             # Upload directly to the container root
-            blob_client_direct = container_client.get_blob_client(f"{file.filename}")
+          
+            blob_client_direct = container_client.get_blob_client(f"{domainName}/{file.filename}")
             file.seek(0)  # Reset the file stream again to the beginning
             upload_response2 = blob_client_direct.upload_blob(file, overwrite=True)
             print(f"File uploaded successfully to container. Request ID: {upload_response2['request_id']}")
@@ -59,21 +61,26 @@ def upload_to_azure_blob_storage(containerName, files):
         return False
     
 
-def delete_from_azure_blob_storage(containerName, blobName):
+def delete_from_azure_blob_storage(containerName, blobName, domainName, versionId, isRootBlob):
     try:
         # Get a reference to the container
         container_client = blob_service_client.get_container_client(containerName)
+        blobName_new = 'new/'+blobName
+        blobName_domain = f'{domainName}/{blobName}'
 
         # Get a block blob client
-        blob_client = container_client.get_blob_client(blobName)
-        blobName = 'new/'+blobName
+        blob_client = container_client.get_blob_client(blobName_domain)
         container_client
-        blob_client_new = container_client.get_blob_client(blobName)
+        blob_client_new = container_client.get_blob_client(blobName_new)
         print('hey')
         if blob_client_new.exists():
             blob_client_new.delete_blob()
         # Delete the blob
-        blob_client.delete_blob()
+        if(isRootBlob == "yes"):
+            blob_client.delete_blob()
+        else:
+            blob_client.delete_blob(version_id = versionId)
+
         print(f"File deleted successfully")
         return True
     except Exception as error:

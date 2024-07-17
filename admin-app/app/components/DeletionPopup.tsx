@@ -12,7 +12,7 @@ const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted,
 
   const handleDelete = () => {
     setIsLoading(true)
-    fetch('http://localhost:5000/api/dropcollection', {
+    fetch('https://flask-backend-deployment.azurewebsites.net/api/dropcollection', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -21,7 +21,7 @@ const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted,
     })
     .then(response => {
       if (response.status === 201) {
-        return  fetch('http://localhost:5000/api/dropIndex', {
+        return  fetch('https://flask-backend-deployment.azurewebsites.net/api/dropIndex', {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted,
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-      <div className="flex flex-col bg-white p-8 rounded-lg shadow-md relative items-center">
+      <div className="flex flex-col bg-white p-8 rounded-lg shadow-md relative items-center w-2/6">
         {isLoading && (
           <>
             <div className="flex justify-center mb-4">
@@ -62,7 +62,10 @@ const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted,
             <p className="text-[#1a2d58] text-center mb-4 font-semibold">Deleting</p>
           </>
         )}
-        <p className='font-semibold text-lg'>Are you sure you want to delete the course?</p>
+        {
+          !isLoading && (
+            <>
+                    <p className='font-semibold text-lg'>Are you sure you want to delete the course?</p>
         <p className='text-[#ff3b3b] text-sm'>Warning: Deleting this folder will delete all the content inside</p>
         <div className='flex w-1/2'>
         <button
@@ -79,7 +82,10 @@ const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted,
         </button>
 
 
-        </div>
+        </div></>
+          )
+        }
+
       </div>
     </div>
   );
