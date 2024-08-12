@@ -17,7 +17,7 @@ const BlobDeletionPopup: React.FC<BlobDeletionPopupProps> = ({fileName, collecti
 
   const handleBlobDelete = () => {
     setIsLoading(true);
-    fetch(`https://flask-backend-deployment.azurewebsites.net/api/${collectionName}/${domainName}/deletedocument`, {
+    fetch(`http://127.0.0.1:5000/api/${collectionName}/${domainName}/deletedocument`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -43,7 +43,7 @@ const BlobDeletionPopup: React.FC<BlobDeletionPopupProps> = ({fileName, collecti
   }
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-      <div className="flex flex-col bg-white p-8 rounded-lg shadow-md relative items-center w-2/6">
+      <div className="flex flex-col bg-white p-8 rounded-lg shadow-md relative items-center sm:w-2/6 w-5/6">
         {isLoading && (
           <>
             <div className="flex justify-center mb-4">

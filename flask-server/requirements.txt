@@ -14,3 +14,4 @@ pytz
 python-docx
 PyMuPDF
 gunicorn
+azure-storage-file-datalake

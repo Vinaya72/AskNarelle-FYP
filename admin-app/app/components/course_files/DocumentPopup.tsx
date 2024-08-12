@@ -73,14 +73,14 @@ const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectio
     // formData.append('chunkSize', chunkSize.toString())
     // formData.append('overlap', overlap.toString())
     setProgress('Uploading To File Storage')
-    fetch(`https://flask-backend-deployment.azurewebsites.net/api/${collectionName}/${domainName}/createdocument`, {
+    fetch(`http://127.0.0.1:5000/api/${collectionName}/${domainName}/createdocument`, {
           method: 'PUT',
            body: formData
       })
     .then(response => {
         if (response.ok) {
           setProgress('Uploading To Vector Store')
-          return fetch('https://flask-backend-deployment.azurewebsites.net/vectorstore', {
+          return fetch('http://127.0.0.1:5000/vectorstore', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -115,7 +115,7 @@ const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectio
   
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-      <div className="bg-white p-8 rounded-lg shadow-md relative w-2/5">
+      <div className="bg-white p-8 rounded-lg shadow-md relative sm:w-2/6 w-5/6">
         {
           !isLoading && (
             <button

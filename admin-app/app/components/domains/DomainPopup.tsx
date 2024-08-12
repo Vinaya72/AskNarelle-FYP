@@ -2,14 +2,18 @@ import { useState } from 'react';
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { Oval } from 'react-loader-spinner';
 
+
 interface PopupProps {
   onClose: () => void;
-  onCollectionCreated: () => void;
+  onDomainCreated: () => void;
+  collectionName: string
+  
 }
 
-const Popup: React.FC<PopupProps> = ({ onClose, onCollectionCreated}) => {
+const DomainPopup: React.FC<PopupProps> = ({ onClose, onDomainCreated, collectionName}) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -17,46 +21,33 @@ const Popup: React.FC<PopupProps> = ({ onClose, onCollectionCreated}) => {
 
   const handleSubmit = () => {
     setIsLoading(true)
-    fetch('https://flask-backend-deployment.azurewebsites.net/api/createcollection', {
+    fetch('http://127.0.0.1:5000/api/createdomain', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ collectionName: inputValue }),
+      body: JSON.stringify({ domainName: inputValue, courseName: collectionName}),
     })
     .then(response => {
       if (response.ok) {
-        return fetch('https://flask-backend-deployment.azurewebsites.net/createindex', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ collectionName: inputValue })
-        });
+        console.log('Domain created successfully');
       } else {
-        throw new Error('Failed to create document');
-      }
-    })
-    .then(flaskResponse => {
-      if (flaskResponse.ok) {
-        console.log('Index created successfully');
-      } else {
-        throw new Error('Failed to create index');
+        throw new Error('Failed to create domain');
       }
     })
     .catch(error => {
-      console.error('Error creating index:', error);
+      console.error('Error creating domain:', error);
     })
     .finally(() => {
       setIsLoading(false);
       onClose();
-      onCollectionCreated(); // Close the popup regardless of success or failure
+      onDomainCreated(); // Close the popup regardless of success or failure
     });
   };
   
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-      <div className="bg-white p-8 rounded-lg shadow-md relative w-2/6">
+      <div className="bg-white p-8 rounded-lg shadow-md relative sm:w-2/6 w-5/6">
         { !isLoading && (
            <button
            onClick={onClose}
@@ -87,7 +78,7 @@ const Popup: React.FC<PopupProps> = ({ onClose, onCollectionCreated}) => {
         {
           !isLoading && (
             <>
-            <label htmlFor="courseName" className="block mb-2 text-gray-800 font-semibold">Course Name</label>
+            <label htmlFor="courseName" className="block mb-2 text-gray-800 font-semibold">Domain Name</label>
             <input
               type="text"
               value={inputValue}
@@ -111,4 +102,4 @@ const Popup: React.FC<PopupProps> = ({ onClose, onCollectionCreated}) => {
   );
 };
 
-export default Popup;
+export default DomainPopup;

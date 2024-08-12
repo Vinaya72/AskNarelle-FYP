@@ -2,26 +2,29 @@
 
 import React from 'react';
 import { useState, useEffect } from 'react';
-import DocumentPopup from '../components/DocumentPopup';
+import DocumentPopup from '../components/course_files/DocumentPopup';
 import { AiOutlineFileAdd } from "react-icons/ai";
 import { useSearchParams } from 'next/navigation';
-import FileCard from '../components/FileCard';
+import FileCard from '../components/course_files/FileCard';
 import { CiSearch } from "react-icons/ci";
-import FileDeletionPopup from '../components/FileDeletionPopup';
-import FileMovementPopup from '../components/FileMovementPopup';
-import BlobDeletionPopup from '../components/BlobDeletionPopup';
+import FileDeletionPopup from '../components/course_files/FileDeletionPopup';
+import FileMovementPopup from '../components/course_files/FileMovementPopup';
+import BlobDeletionPopup from '../components/course_files/BlobDeletionPopup';
 import { Suspense } from 'react';
-import FilesTable from '../components/FilesTable';
+import FilesTable from '../components/course_files/FilesTable';
 
 interface Document{
     _id: string;
-    file: string;
+    name: string;
     url: string;
     version_id: string;
+    blob_name: string;
+    domain: string;
     date_str: string;
     time_str: string;
     in_vector_store: string;
-    is_root_blob: string
+    is_root_blob: string;
+    course_name: string
 }
 function Fileslist(): JSX.Element{
     const [message, setMessage] = useState<Document[]>([]);
@@ -113,7 +116,7 @@ function Fileslist(): JSX.Element{
   
     useEffect(() => {
       // console.log("Document");
-        fetch(`https://flask-backend-deployment.azurewebsites.net/api/collections/${collectionName}/${domainName}`)
+        fetch(`http://127.0.0.1:5000/api/collections/${collectionName}/${domainName}`)
         .then(response => {
           if (!response.ok) {
             throw new Error('Failed to fetch collections');
@@ -129,62 +132,47 @@ function Fileslist(): JSX.Element{
     }, [fileCreated, fileDeleted, collectionName, blobDeleted, fileMoved]); 
 
     const filteredFiles = message.filter(document =>
-      document.file.toLowerCase().includes(searchQuery.toLowerCase())
+      document?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   
   
     return (
-      <main className="flex h-screen flex-col p-24 bg-gray-100">
+      <main className="flex h-screen mt-[8vh] lg:mt-[0vh] flex-col p-10 sm:p-24 bg-gray-100">
         <div className="flex flex-row justify-between">
-        <div className="font-semibold relative w-10 text-xl">
+        <div className="font-semibold relative w-10 text-xl font-nunito">
           {collectionName}
-          <div className="absolute bottom-0 left-2 w-full h-1 bg-[#3F50AD]"></div>
+          <div className="absolute left-2 w-full h-1 bg-[#3C456C]"></div>
         </div>
          <div>
-          {message.length > 0 &&  <button onClick={handleButtonClick} className="bg-[#2C3463] text-white py-2 px-4 rounded-lg font-normal transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-[#3C456C]">Add New File</button>}
+          {message.length > 0 &&  <button onClick={handleButtonClick} className="bg-[#2C3463] text-white py-2 px-4 rounded-lg font-normal transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-[#3C456C] font-nunito">Add New File</button>}
          </div>
         </div>
         {message.length > 0 ? (
           <>
-           <div className='flex items-center justify-center'>
-        <input
-            type="text"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            placeholder="Search files..."
-            className="border border-gray-300 rounded-lg py-2 px-4 mr-2"
-          />
-             <CiSearch size={35}/> 
-        </div>
-        <div className="flex flex-col mt-5 justify-center items-center overflow-scroll">
-          {/* {filteredFiles.map((document: Document, index: number) => (
-            <FileCard
-              key={index}
-              fileName={document.file}
-              collectionName={collectionName}
-              id={document._id}
-              onFileDeleted={handlePressDelete}
-              url = {document.url}
-              date={document.date_str}
-              time={document.time_str}
-              version_id={document.version_id}
-              in_vector_store={document.in_vector_store}
-              is_root_blob={document.is_root_blob}
-              onFileMoved={handlePressMovement}
-              onBlobDeleted={handlePressBlobDelete}
+           <div className='flex items-center justify-center mt-5 sm:mt-0'>
+           <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search for Files"
+              className="border border-gray-300 rounded-lg py-2 pl-10 pr-4 mr-2 w-full font-nunito"
             />
-          ))} */}
+            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+              <CiSearch size={20} />
+            </div>
+          </div>
+        </div> 
            <FilesTable files={filteredFiles} collectionName={collectionName} onFileDeleted={handlePressDelete} onFileMoved={handlePressMovement} onBlobDeleted={handlePressBlobDelete}/>
-        </div>
         </>
       ) : (
         <div className="flex h-screen flex-col items-center justify-center">
-          <div className="flex flex-col bg-white w-4/5 border border-dotted border-[#3F50AD] p-4 mx-auto rounded-lg items-center">
+          <div className="flex flex-col bg-white sm:w-4/5 w-full border border-dotted border-[#3F50AD] p-4 mx-auto rounded-lg items-center">
             <AiOutlineFileAdd size={50} color="#2C3463" />
-            <p className="font-semibold text-lg mt-2">Upload the materials</p>
+            <p className="font-semibold text-lg mt-2 font-nunito">Upload the materials</p>
             <button
               onClick={handleButtonClick}
-              className="bg-[#2C3463] text-white py-2 px-4 rounded-lg font-normal mt-5 w-2/5 transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-[#3C456C]"
+              className="bg-[#2C3463] text-white py-2 px-4 rounded-lg font-normal mt-5 sm:w-2/5 w-full  transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-[#3C456C] font-nunito"
             >
               Add New Files
             </button>

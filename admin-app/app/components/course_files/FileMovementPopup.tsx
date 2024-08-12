@@ -22,7 +22,7 @@ const FileMovementPopup: React.FC<FileMovementPopupProps> = ({fileName, collecti
 
   const handleFileMovement = () => {
     setIsLoading(true);
-    fetch(`https://flask-backend-deployment.azurewebsites.net/movetovectorstore`, {
+    fetch(`http://127.0.0.1:5000/movetovectorstore`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -40,7 +40,7 @@ const FileMovementPopup: React.FC<FileMovementPopupProps> = ({fileName, collecti
     })
     .then(response => {
       if (response.status === 201) {
-        return fetch(`https://flask-backend-deployment.azurewebsites.net/updatemovement`, {
+        return fetch(`http://127.0.0.1:5000/updatemovement`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ const FileMovementPopup: React.FC<FileMovementPopupProps> = ({fileName, collecti
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-      <div className=" bg-white p-8 rounded-lg shadow-md relative w-2/6">
+      <div className=" bg-white p-8 rounded-lg shadow-md relative sm:w-2/6 w-5/6">
         {isLoading && (
           <>
             <div className="flex justify-center mb-4">

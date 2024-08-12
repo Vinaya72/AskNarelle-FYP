@@ -30,6 +30,22 @@ def delete_blob_storage_container(containerName):
         print(f"Error deleting container: {error}")
         return False
     
+def delete_domain_virtual_folder(containerName, domainName):
+    try:
+        container_client = blob_service_client.get_container_client(containerName.lower())
+        blob_list = container_client.list_blobs(name_starts_with=f"{domainName}/")
+        
+        for blob in blob_list:
+            blob_client = container_client.get_blob_client(blob)
+            blob_client.delete_blob()
+            print(f"Deleted blob: {blob.name}")
+        
+        print("Virtual folder deleted successfully.")
+        return True
+    except Exception as error:
+        print(f"Error deleting virtual folder: {error}")
+        return False
+    
 def upload_to_azure_blob_storage(containerName, files, domainName):
     try:
         container_client = blob_service_client.get_container_client(containerName)
@@ -98,3 +114,4 @@ def generate_sas_token(container_name, blob_name):
         expiry=datetime.utcnow() + timedelta(hours=1)  # Adjust expiry time as needed
     )
     return sas_token
+

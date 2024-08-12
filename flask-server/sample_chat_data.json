@@ -1,0 +1,402 @@
+[
+  {
+    "username": "user1",
+    "message": "I love the new features in CZ2002!",
+    "timestamp": "2024-08-01T08:30:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user2",
+    "message": "I am worried about the CZ4002 update.",
+    "timestamp": "2024-08-01T09:00:00Z",
+    "topic": "cz4002",
+    "sentiment": "negative",
+    "emotion": "worried"
+  },
+  {
+    "username": "user3",
+    "message": "CZ3001 was okay, but could be better.",
+    "timestamp": "2024-08-01T09:30:00Z",
+    "topic": "cz3001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user4",
+    "message": "Excited about CZ2002!",
+    "timestamp": "2024-08-01T10:00:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user5",
+    "message": "CZ4036 is not what I expected.",
+    "timestamp": "2024-08-01T10:30:00Z",
+    "topic": "cz4036",
+    "sentiment": "negative",
+    "emotion": "angry"
+  },
+  {
+    "username": "user6",
+    "message": "Happy with the CZ3006 improvements.",
+    "timestamp": "2024-08-01T11:00:00Z",
+    "topic": "cz3006",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user7",
+    "message": "CZ2001 needs more features.",
+    "timestamp": "2024-08-01T11:30:00Z",
+    "topic": "cz2001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user8",
+    "message": "Feeling anxious about CZ4036.",
+    "timestamp": "2024-08-01T12:00:00Z",
+    "topic": "cz4036",
+    "sentiment": "negative",
+    "emotion": "worried"
+  },
+  {
+    "username": "user9",
+    "message": "CZ2002 is amazing!",
+    "timestamp": "2024-08-01T12:30:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user10",
+    "message": "CZ3006 was a disappointment.",
+    "timestamp": "2024-08-01T13:00:00Z",
+    "topic": "cz3006",
+    "sentiment": "negative",
+    "emotion": "sad"
+  },
+  {
+    "username": "user11",
+    "message": "CZ2001 has some nice features.",
+    "timestamp": "2024-08-01T13:30:00Z",
+    "topic": "cz2001",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user12",
+    "message": "Neutral about CZ4036.",
+    "timestamp": "2024-08-01T14:00:00Z",
+    "topic": "cz4036",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user13",
+    "message": "CZ3001 needs more improvements.",
+    "timestamp": "2024-08-01T14:30:00Z",
+    "topic": "cz3001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user14",
+    "message": "Loving CZ2002 so far!",
+    "timestamp": "2024-08-01T15:00:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user15",
+    "message": "CZ4036 update is not good.",
+    "timestamp": "2024-08-01T15:30:00Z",
+    "topic": "cz4036",
+    "sentiment": "negative",
+    "emotion": "angry"
+  },
+  {
+    "username": "user16",
+    "message": "CZ3006 is a huge improvement.",
+    "timestamp": "2024-08-01T16:00:00Z",
+    "topic": "cz3006",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user17",
+    "message": "CZ2001 could be better.",
+    "timestamp": "2024-08-01T16:30:00Z",
+    "topic": "cz2001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user18",
+    "message": "Feeling worried about CZ4002.",
+    "timestamp": "2024-08-01T17:00:00Z",
+    "topic": "cz4002",
+    "sentiment": "negative",
+    "emotion": "worried"
+  },
+  {
+    "username": "user19",
+    "message": "CZ2002 is fantastic!",
+    "timestamp": "2024-08-01T17:30:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user20",
+    "message": "CZ4036 didn't meet my expectations.",
+    "timestamp": "2024-08-01T18:00:00Z",
+    "topic": "cz4036",
+    "sentiment": "negative",
+    "emotion": "angry"
+  },
+  {
+    "username": "user21",
+    "message": "CZ3001 was okay.",
+    "timestamp": "2024-08-01T18:30:00Z",
+    "topic": "cz3001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user22",
+    "message": "Excited about CZ2002 update.",
+    "timestamp": "2024-08-01T19:00:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user23",
+    "message": "CZ4002 is not great.",
+    "timestamp": "2024-08-01T19:30:00Z",
+    "topic": "cz4002",
+    "sentiment": "negative",
+    "emotion": "angry"
+  },
+  {
+    "username": "user24",
+    "message": "CZ3006 is impressive.",
+    "timestamp": "2024-08-01T20:00:00Z",
+    "topic": "cz3006",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user25",
+    "message": "CZ2001 needs more features.",
+    "timestamp": "2024-08-01T20:30:00Z",
+    "topic": "cz2001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user26",
+    "message": "Feeling sad about CZ4036.",
+    "timestamp": "2024-08-01T21:00:00Z",
+    "topic": "cz4036",
+    "sentiment": "negative",
+    "emotion": "sad"
+  },
+  {
+    "username": "user27",
+    "message": "CZ3001 is okay.",
+    "timestamp": "2024-08-01T21:30:00Z",
+    "topic": "cz3001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user28",
+    "message": "Loving the new CZ2002 update!",
+    "timestamp": "2024-08-01T22:00:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user29",
+    "message": "CZ4036 is a letdown.",
+    "timestamp": "2024-08-01T22:30:00Z",
+    "topic": "cz4036",
+    "sentiment": "negative",
+    "emotion": "angry"
+  },
+  {
+    "username": "user30",
+    "message": "CZ3006 has great features.",
+    "timestamp": "2024-08-01T23:00:00Z",
+    "topic": "cz3006",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user31",
+    "message": "CZ2001 could be better.",
+    "timestamp": "2024-08-01T23:30:00Z",
+    "topic": "cz2001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user32",
+    "message": "Worried about the CZ4002 release.",
+    "timestamp": "2024-08-02T00:00:00Z",
+    "topic": "cz4002",
+    "sentiment": "negative",
+    "emotion": "worried"
+  },
+  {
+    "username": "user33",
+    "message": "CZ2002 is fantastic!",
+    "timestamp": "2024-08-02T00:30:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user34",
+    "message": "CZ4036 didn’t meet my expectations.",
+    "timestamp": "2024-08-02T01:00:00Z",
+    "topic": "cz4036",
+    "sentiment": "negative",
+    "emotion": "angry"
+  },
+  {
+    "username": "user35",
+    "message": "CZ3001 is acceptable.",
+    "timestamp": "2024-08-02T01:30:00Z",
+    "topic": "cz3001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user36",
+    "message": "Excited for CZ2002!",
+    "timestamp": "2024-08-02T02:00:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user37",
+    "message": "CZ4002 is disappointing.",
+    "timestamp": "2024-08-02T02:30:00Z",
+    "topic": "cz4002",
+    "sentiment": "negative",
+    "emotion": "angry"
+  },
+  {
+    "username": "user38",
+    "message": "CZ3006 is impressive.",
+    "timestamp": "2024-08-02T03:00:00Z",
+    "topic": "cz3006",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user39",
+    "message": "CZ2001 needs more improvements.",
+    "timestamp": "2024-08-02T03:30:00Z",
+    "topic": "cz2001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user40",
+    "message": "Feeling worried about CZ4036.",
+    "timestamp": "2024-08-02T04:00:00Z",
+    "topic": "cz4036",
+    "sentiment": "negative",
+    "emotion": "worried"
+  },
+  {
+    "username": "user41",
+    "message": "CZ2002 is great!",
+    "timestamp": "2024-08-02T04:30:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user42",
+    "message": "CZ4036 was a letdown.",
+    "timestamp": "2024-08-02T05:00:00Z",
+    "topic": "cz4036",
+    "sentiment": "negative",
+    "emotion": "angry"
+  },
+  {
+    "username": "user43",
+    "message": "CZ3006 is amazing.",
+    "timestamp": "2024-08-02T05:30:00Z",
+    "topic": "cz3006",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user44",
+    "message": "CZ2001 needs more work.",
+    "timestamp": "2024-08-02T06:00:00Z",
+    "topic": "cz2001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user45",
+    "message": "CZ4002 is a letdown.",
+    "timestamp": "2024-08-02T06:30:00Z",
+    "topic": "cz4002",
+    "sentiment": "negative",
+    "emotion": "angry"
+  },
+  {
+    "username": "user46",
+    "message": "CZ3001 is decent.",
+    "timestamp": "2024-08-02T07:00:00Z",
+    "topic": "cz3001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  },
+  {
+    "username": "user47",
+    "message": "Loving CZ2002!",
+    "timestamp": "2024-08-02T07:30:00Z",
+    "topic": "cz2002",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user48",
+    "message": "CZ4036 is not good.",
+    "timestamp": "2024-08-02T08:00:00Z",
+    "topic": "cz4036",
+    "sentiment": "negative",
+    "emotion": "angry"
+  },
+  {
+    "username": "user49",
+    "message": "CZ3006 has great features.",
+    "timestamp": "2024-08-02T08:30:00Z",
+    "topic": "cz3006",
+    "sentiment": "positive",
+    "emotion": "happy"
+  },
+  {
+    "username": "user50",
+    "message": "CZ2001 is okay.",
+    "timestamp": "2024-08-02T09:00:00Z",
+    "topic": "cz2001",
+    "sentiment": "neutral",
+    "emotion": "neutral"
+  }
+]

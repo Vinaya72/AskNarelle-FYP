@@ -2,6 +2,8 @@ from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
 from bson import ObjectId
+from datetime import datetime, timedelta
+import calendar
 
 
 
@@ -22,50 +24,90 @@ chatlogs_db = chat_client['chathistory-storage']
 
 
 
-def create_collection(collectionName):
+def upload_course(course_name, username):
     try:
-        db.create_collection(collectionName)
-        print("done!")
+        doc = {
+           "course_name": course_name,
+           "user": username
+        }
+        
+        db["courses"].update_one(
+                {"course_name": doc["course_name"]},
+                {"$set": doc},           
+                upsert=True             
+            )
         return True
     except Exception as e:
         print(e)
         return False
 
-def drop_collection(collectionName):
+def delete_all_course_documents(course_name):
     try:
-        db.drop_collection(collectionName)
+        db["uploaded_files"].delete_many(
+            {"course_name": course_name}
+        )
+        db["courses"].delete_one({
+            "course_name": course_name
+        })
         return True
     except Exception as e:
         return False
     
-def create_document(collectionName, files):
+def delete_domain_docs(course_name, domain_name):
+    try:
+        db["uploaded_files"].delete_many(
+            {"course_name": course_name, "domain": domain_name}
+        )
+        return True
+     
+    except Exception as e:
+        return False
+    
+def upload_domain(domain_name, course_name):
+    print("course_name", course_name)
+    try:
+        doc = {
+            "file": 'null',
+            "url": 'null',
+            "blob_name": 'null',
+            "domain": domain_name,
+            "version_id": 'null',
+            "date_str": 'null',
+            "time_str": 'null',
+            "in_vector_store": 'null',
+            "is_root_blob": 'null',
+            "course_name": course_name
+        }  
+        db["uploaded_files"].update_one(
+            {"domain_name": domain_name, "file": 'null', "course_name": course_name},
+            {"$set": doc},           
+            upsert=True             
+        )
+        print("uploaded successfully")
+        return True
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+        
+
+    
+def create_document(files):
     try:
         for file in files:
-            doc = {
-                "file": file['name'],
-                "url": file['url'],
-                "blob_name": file['blob_name'],
-                "domain_name": file['domain'],
-                "version_id": file['version_id'],
-                "date_str": file['date_str'],
-                "time_str": file['time_str'],
-                "in_vector_store": file['in_vector_store'],
-                "is_root_blob": file['is_root_blob']
-            }  
             
-            db[collectionName].update_many(
+            db["uploaded_files"].update_many(
                 {"file": file['name'], "in_vector_store": "yes"},
                 {"$set": {"in_vector_store": "no"}}
             )
 
-            db[collectionName].update_many(
+            db["uploaded_files"].update_many(
                 {"file": file['name'], "is_root_blob": "yes"},
                 {"$set": {"is_root_blob": "no"}}
             )
 
-            db[collectionName].update_one(
+            db["uploaded_files"].update_one(
                 {"version_id": file['version_id']},
-                {"$set": doc},           
+                {"$set": file},           
                 upsert=True             
             )
         return True
@@ -100,6 +142,7 @@ def delete_document(collectionName, doc_id, isRootBlob, fileName):
         return True
     except Exception as e:
         return False
+    
 
 def get_collections():
     try:
@@ -108,12 +151,36 @@ def get_collections():
     except Exception as e:
         return False
 
-def get_documents(collectionName, domain_name):
+def list_courses(username):
+    courses_list = []
     try:
-        documents = list(db[collectionName].find({"domain_name": domain_name}))
+        documents = list(db["courses"].find({"user": username}))
         # Convert ObjectId to string
         for doc in documents:
-            doc['_id'] = str(doc['_id'])
+            doc['_id'] = str(doc['_id'])   
+            courses_list.append(doc['course_name'])
+        return courses_list
+    except Exception as e:
+        return False
+    
+def get_domain_files(course_name):
+    domains_list = []
+    try:
+        documents = list(db["uploaded_files"].find({"file":'null', "course_name": course_name}))
+
+        for doc in documents:
+            doc['_id'] = str(doc['_id'])   
+            domains_list.append(doc['domain_name'])
+        return domains_list
+    except Exception as e:
+        return False
+    
+def get_documents(course_name, domain_name):
+    try:
+        documents = list(db["uploaded_files"].find({"domain": domain_name, "course_name": course_name, "file": {"$ne": "null"}}))
+        # Convert ObjectId to string
+        for doc in documents:
+            doc['_id'] = str(doc['_id'])   
         return documents
     except Exception as e:
         return False
@@ -127,4 +194,273 @@ def get_chatlogs():
 
         return chats_logs
     except Exception as e:
+        print(e)
         return False
+
+def get_course_files_count(course_name):
+    count = 0
+    try:
+        documents = list(db["uploaded_files"].find({"course_name": course_name, "file": {"$ne": "null"}}))
+        # Convert ObjectId to string
+        for doc in documents:
+            count = count + 1
+        return count
+    except Exception as e:
+        return "False"
+    
+def get_domain_files_count(course_name, domain_name):
+    count = 0
+    try:
+        documents = list(db["uploaded_files"].find({"course_name": course_name, "domain": domain_name, "file": {"$ne": "null"}}))
+        # Convert ObjectId to string
+        for doc in documents:
+            count = count + 1
+        return count
+    except Exception as e:
+        return "False"
+    
+def get_users_count(username):
+    try:
+        users = 0
+        user_courses_docs = list(db["courses"].find({"user": username }))
+        for doc in user_courses_docs:   
+            unique_users = chatlogs_db["chat-collections"].find({"topic": doc["course_name"]}).distinct("username")
+            users = users + len(unique_users)
+        
+        return users
+    except Exception as e:
+        return "False"
+
+
+def get_queries_count(username):
+    try:
+        queries = 0
+        user_course_queries = list(db["courses"].find({"user": username }))
+        for doc in user_course_queries:
+            course_queries = list(chatlogs_db["chat-collections"].find({"topic":  doc["course_name"]}))
+            queries = queries + len(course_queries)
+
+        return  queries
+    except Exception as e:
+        return "False"
+    
+def get_queries_by_month(username):
+    now = datetime.now()
+    start_date = now - timedelta(days=365)
+
+    start_date = start_date.replace(day=1)
+    end_date = now.replace(day=1)
+
+
+    months = []
+    years = []
+    counts = []
+    courses_to_include = []
+    try:
+        user_courses = list(db["courses"].find({"user": username }))
+        for doc in user_courses:
+            courses_to_include.append(doc["course_name"])
+
+        pipeline = [
+    {
+        "$match": {
+           "$and": [
+                # { 
+                #     "$expr": {
+                #         "$gte": [
+                #             { "$dateFromString": { "dateString": "$timestamp" } }, 
+                #             start_date
+                #         ]
+                #     }
+                # },
+                # { 
+                #     "$expr": {
+                #         "$lt": [
+                #             { "$dateFromString": { "dateString": "$timestamp" } }, 
+                #             end_date
+                #         ]
+                #     }
+                # },
+                { "topic": { "$in": courses_to_include } }
+            ]
+                }
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "year": { "$year": { "$dateFromString": { "dateString": "$timestamp" } } },
+                        "month": { "$month": { "$dateFromString": { "dateString": "$timestamp" } } }
+                    },
+                    "count": { "$sum": 1 }
+                }
+            },
+            {
+                "$sort": { "_id.year": 1, "_id.month": 1 }
+            }
+        ]
+        
+        result = list(chatlogs_db["chat-collections"].aggregate(pipeline))
+        for entry in result:
+            year = entry["_id"]["year"]
+            month = entry["_id"]["month"]
+            count = entry["count"]
+            month_name = calendar.month_name[month]
+            
+            # Use a formatted string for consistency
+            month_year = f"{month_name} {year}"
+            
+            # Append values to the lists
+            months.append(month_year)
+            years.append(year)
+            counts.append(count)
+        output = {
+            "months": months,
+            "counts": counts
+        }
+        return output
+    except Exception as e:
+        print(e)
+        return "False"
+    
+def get_queries_by_course(username):
+     
+    courses_to_include = []
+    courses = []
+    counts = []
+    try:
+        user_courses = list(db["courses"].find({"user": username }))
+        for doc in user_courses:
+            courses_to_include.append(doc["course_name"])
+        
+        pipeline = [
+            {
+                "$match": {
+                    "topic": { "$in": courses_to_include } 
+                }
+            }, 
+            {
+                "$group": {
+                    "_id": "$topic", 
+                    "count": { "$sum": 1 } 
+                }
+            }
+        ]
+
+        result = list(chatlogs_db["chat-collections"].aggregate(pipeline))
+
+        for entry in result:
+            course = entry["_id"]
+            count = entry["count"]
+
+            courses.append(course)
+            counts.append(count)
+        
+        output = {
+            "courses": courses,
+            "counts": counts
+        }
+
+        return output
+
+    
+    except Exception as e:
+        print(e)
+        return "False"
+
+def get_user_sentiments(username):
+
+    courses_to_include = []
+    sentiments = []
+    counts = []
+    try:
+        user_courses = list(db["courses"].find({"user": username }))
+        for doc in user_courses:
+            courses_to_include.append(doc["course_name"])
+        
+        pipeline = [
+            {
+                "$match": {
+                    "topic": { "$in": courses_to_include } 
+                }
+            }, 
+            {
+                "$group": {
+                    "_id": "$sentiment", 
+                    "count": { "$sum": 1 } 
+                }
+            }
+        ]
+
+        result = list(chatlogs_db["chat-collections"].aggregate(pipeline))
+
+        for entry in result:
+            sentiment = entry["_id"]
+            count = entry["count"]
+
+            sentiments.append(sentiment)
+            counts.append(count)
+        
+        output = {
+            "sentiments": sentiments,
+            "counts": counts
+        }
+
+        return output
+
+
+    except Exception as e:
+        print(e)
+        return "False"
+    
+def get_user_emotions(username):
+
+    courses_to_include = []
+    emotions = []
+    counts = []
+    try:
+        user_courses = list(db["courses"].find({"user": username }))
+        for doc in user_courses:
+            courses_to_include.append(doc["course_name"])
+        
+        pipeline = [
+            {
+                "$match": {
+                    "topic": { "$in": courses_to_include } 
+                }
+            }, 
+            {
+                "$group": {
+                    "_id": "$emotion", 
+                    "count": { "$sum": 1 } 
+                }
+            }
+        ]
+
+        result = list(chatlogs_db["chat-collections"].aggregate(pipeline))
+
+        for entry in result:
+            emotion = entry["_id"]
+            count = entry["count"]
+
+            emotions.append(emotion)
+            counts.append(count)
+        
+        output = {
+            "emotions": emotions,
+            "counts": counts
+        }
+
+        return output
+
+
+    except Exception as e:
+        print(e)
+        return "False"
+
+ 
+
+
+
+
+   
+    

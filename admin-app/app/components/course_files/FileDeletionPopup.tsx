@@ -17,7 +17,7 @@ const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collecti
 
   const handleDelete = () => {
     setIsLoading(true);
-    fetch(`https://flask-backend-deployment.azurewebsites.net/api/${collectionName}/deleteembeddings`, {
+    fetch(`http://127.0.0.1:5000/api/${collectionName}/deleteembeddings`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -30,7 +30,7 @@ const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collecti
     })
     .then(response => {
       if (response.status === 201) {
-        return fetch(`https://flask-backend-deployment.azurewebsites.net/api/${collectionName}/${domainName}/deletedocument`, {
+        return fetch(`http://127.0.0.1:5000/api/${collectionName}/${domainName}/deletedocument`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json',
@@ -60,7 +60,7 @@ const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collecti
   }
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-      <div className="flex flex-col bg-white p-8 rounded-lg shadow-md relative items-center w-2/6">
+      <div className="flex flex-col bg-white p-8 rounded-lg shadow-md relative items-center sm:w-2/6 w-5/6">
         {isLoading && (
           <>
             <div className="flex justify-center mb-4">

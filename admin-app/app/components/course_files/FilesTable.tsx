@@ -5,7 +5,7 @@ import FileCard from './FileCard';
 
 interface Document{
     _id: string;
-    file: string;
+    name: string;
     url: string;
     version_id: string;
     date_str: string;
@@ -30,27 +30,27 @@ const FilesTable: React.FC<FileTableProps> = ({
   onBlobDeleted,
 }) => {
   return (
-    <div className="overflow-scroll">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div className="overflow-scroll mt-5">
+      <table className="min-w-full divide-y divide-gray-200 rounded-lg">
+       <thead className="bg-[#2C3463] sticky top-0 z-10">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider font-nunito">
               File Name
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider font-nunito">
               In Vector Store ?
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider font-nunito">
               Is Root File ?
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider font-nunito">
               Date
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider font-nunito">
               Time
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Actions
+            <th className="px-6 py-3 text-left text-sm font-medium text-white tracking-wider font-nunito">
+              Actions 
             </th>
           </tr>
         </thead>
@@ -58,27 +58,27 @@ const FilesTable: React.FC<FileTableProps> = ({
           {files.map((document: Document, index: number) => (
             <tr key={index}>
               <td className="px-6 py-4 whitespace-nowrap">
-              <a href={document.url} download={document.file} className="text-blue-600 text-center underline">
-              {document.file}
+              <a href={document.url} download={document.name} className="text-blue-600 text-center underline font-nunito text-sm">
+              {document.name}
                </a>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900 font-medium">{document.in_vector_store.toString()}</div>
+                <div className="text-sm text-[#7C8397] font-medium font-nunito">{document.in_vector_store.toString()}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900 font-medium">{document.is_root_blob.toString()}</div>
+                <div className="text-sm text-[#7C8397] font-medium font-nunito">{document.is_root_blob.toString()}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900 font-medium">{document.date_str}</div>
+                <div className="text-sm text-[#7C8397] font-medium font-nunito">{document.date_str}</div>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm text-gray-900 font-medium">{document.time_str}</div>
+                <div className="text-sm text-[#7C8397] font-medium font-nunito">{document.time_str}</div>
               </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium font-nunito">
               { (document.in_vector_store === "yes") && (
                 <button
-                  className="text-red-500 mr-5 border border-solid p-2 border-red-500 transition duration-300 transform hover:scale-105"
-                  onClick={() => onFileDeleted(document._id, collectionName, document.file, document.version_id, document.is_root_blob)}
+                  className="text-red-500 mr-5 border border-solid p-2 transition duration-300 transform hover:scale-105 rounded-xl bg-red-500 bg-opacity-20"
+                  onClick={() => onFileDeleted(document._id, collectionName, document.name, document.version_id, document.is_root_blob)}
                 >
                   Delete
                 </button> )}
@@ -86,13 +86,13 @@ const FilesTable: React.FC<FileTableProps> = ({
                     <>
                      <button
                      className="text-orange-500 mr-5 border border-solid p-2 border-orange-500 transition duration-300 transform hover:scale-105"
-                     onClick={() => onBlobDeleted(document._id, collectionName, document.file, document.version_id, document.is_root_blob)}
+                     onClick={() => onBlobDeleted(document._id, collectionName, document.name, document.version_id, document.is_root_blob)}
                    >
                      Delete From File Storage
                    </button>
                 <button
                   className="text-green-500 mr-5 border border-solid p-2 border-green-500 transition duration-300 transform hover:scale-105"
-                  onClick={() => onFileMoved(document._id, collectionName, document.file, document.version_id)}
+                  onClick={() => onFileMoved(document._id, collectionName, document.name, document.version_id)}
                 >
                   Move to vector store
                 </button> 
@@ -101,13 +101,13 @@ const FilesTable: React.FC<FileTableProps> = ({
                     <>
             <button
             className="text-red-500 mr-5 border border-solid p-2 border-red-500 transition duration-300 transform hover:scale-105"
-            onClick={() => onFileDeleted(document._id, collectionName, document.file, document.version_id, document.is_root_blob)}
+            onClick={() => onFileDeleted(document._id, collectionName, document.name, document.version_id, document.is_root_blob)}
           >
             Delete
           </button> 
                      <button
                      className="text-green-500 mr-5 border border-solid p-2 border-green-500 transition duration-300 transform hover:scale-105"
-                     onClick={() => onFileMoved(document._id, collectionName, document.file, document.version_id)}
+                     onClick={() => onFileMoved(document._id, collectionName, document.name, document.version_id)}
                    >
                      Move to vector store
                    </button>

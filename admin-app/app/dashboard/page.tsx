@@ -1,8 +1,12 @@
 "use client";
 
 import {useEffect, Suspense, useState} from 'react'
-import MyResponsivePie from '../components/SentimentPieChart';
-import EmotionsPieChart from '../components/EmotionPieChart';
+import SearchBar from '../components/dashboard/SearchBar';
+import CardDataStats from '../components/dashboard/CardDataStats';
+import { IoPeople } from "react-icons/io5";
+import ChartOne from '../components/dashboard/ChartOne';
+import ChartTwo from '../components/dashboard/ChartTwo';
+import ChartThree from '../components/dashboard/ChartThree';
 
 interface ChatObject {
   "_id": string,
@@ -14,7 +18,7 @@ interface ChatObject {
 
 
 const prepareSentimentChartData = (logs: ChatObject[]) => {
-  const sentimentCounts = logs.reduce((acc, log) => {
+  const sentimentCounts = logs?.reduce((acc, log) => {
       acc[log.sentiment] = (acc[log.sentiment] || 0) + 1;
       return acc;
   }, {} as Record<'POS' | 'NEG' | 'NEU', number>);
@@ -49,7 +53,7 @@ function Dashboard () {
   const[chats, setChats] = useState<ChatObject[]>([])
 
   useEffect(() => {
-    fetch('https://flask-backend-deployment.azurewebsites.net/get-chats')
+    fetch('http://127.0.0.1:5000/get-chats')
     .then(response => {
       if (!response.ok) {
         throw new Error('Failed to fetch collections');
@@ -68,35 +72,70 @@ function Dashboard () {
   const emotionData = prepareEmotionChartData(chats);
 
 
-  return (
-    <div className='flex flex-col justify-center items-center h-screen'>
-    <div className="font-semibold relative w-10 text-xl">
-        Dashboard
-        <div className="absolute bottom-0 left-5 w-full h-1 bg-[#3F50AD]"></div>
+  return (  
+   <div className='flex flex-col h-[95vh] mt-[8vh] mx-12'>
+      <div className='flex justify-between w-full'>
+        <div className='flex flex-col'>
+          <div className='text-2xl font-nunito font-semibold'>Good Evening,</div>
+          <div className='text-gray-400 font-nunito'>AskNarelle dashboard homepage</div>
+        </div>
+        <div className='flex'>
+          <div>
+            <SearchBar/>
+          </div>
+          {/* <div>
+          <CgProfile size={45} color={'#2C3463'}/>
+          </div> */}
+
+        </div>
       </div>
-         <div className="flex mx-auto p-4 w-full">
-          <div className='flex flex-col justify-center items-center w-1/2 p-2 '>
-              <div className='text-[##3F50AD] text-lg font-semibold'>
-                Sentiment Chart
-              </div>
-              <div className='w-full'>
-                  <MyResponsivePie data={sentimentData} />
-              </div>
-
+      <div className= 'grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5 mr-12'>
+          <div>
+            <CardDataStats title="Total Users" total="3.456" rate="0.95%" levelDown>
+                <div className="flex items-center justify-center rounded-full bg-gray-200 w-14 h-14">
+                  <IoPeople size={30} color={'#2C3463'} />
+                </div>
+            </CardDataStats>
           </div>
-          <div className='flex flex-col justify-center items-center w-1/2 p-2 '>
-              <div className='text-[##3F50AD] text-lg font-semibold'>
-                Emotion Chart
-              </div>
-              <div className='w-full'>
-              <EmotionsPieChart data={emotionData} />
-              </div>
-
+          <div className='flex justify-center bg-yellow-200 '>
+              <CardDataStats title="Total Users" total="3.456" rate="0.95%" levelDown>
+                <div className="flex items-center justify-center rounded-full bg-gray-200 w-14 h-14">
+                  <IoPeople size={30} color={'#2C3463'} />
+                </div>
+              </CardDataStats>
           </div>
-
-           </div>
-    </div>
-   
+          <div className='flex justify-center bg-slate-400 '>
+              <CardDataStats title="Total Users" total="3.456" rate="0.95%" levelDown>
+                  <div className="flex items-center justify-center rounded-full bg-gray-200 w-14 h-14">
+                    <IoPeople size={30} color={'#2C3463'} />
+                  </div>
+               </CardDataStats>
+          </div>
+          <div className='flex justify-center bg-slate-400 '>
+              <CardDataStats title="Total Users" total="3.456" rate="0.95%" levelDown>
+                <div className="flex items-center justify-center rounded-full bg-gray-200 w-14 h-14">
+                  <IoPeople size={30} color={'#2C3463'} />
+                </div>
+              </CardDataStats>
+          </div>
+      </div>
+      <div className= 'grid grid-cols-[50%_50%] gap-4 mt-5'>
+            <div className='flex justify-center bg-yellow-200 '>
+              <ChartOne/>
+            </div>
+            <div className='flex justify-center bg-slate-400 '>
+              <ChartTwo/>
+            </div>
+      </div>
+      <div className= 'grid grid-cols-[50%_50%] gap-4 mt-5'>
+            <div className='flex justify-center'>
+            <ChartThree />
+            </div>
+            <div className='flex justify-center'>
+            <ChartThree />
+            </div>
+      </div>
+   </div>
   )
 }
 

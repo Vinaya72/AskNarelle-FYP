@@ -12,7 +12,7 @@ const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted,
 
   const handleDelete = () => {
     setIsLoading(true)
-    fetch('https://flask-backend-deployment.azurewebsites.net/api/dropcollection', {
+    fetch('http://127.0.0.1:5000/api/dropcollection', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -21,7 +21,7 @@ const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted,
     })
     .then(response => {
       if (response.status === 201) {
-        return  fetch('https://flask-backend-deployment.azurewebsites.net/api/dropIndex', {
+        return  fetch('http://127.0.0.1:5000/api/dropIndex', {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -44,7 +44,7 @@ const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted,
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
-      <div className="flex flex-col bg-white p-8 rounded-lg shadow-md relative items-center w-2/6">
+      <div className="flex flex-col bg-white p-8 rounded-lg shadow-md relative items-center sm:w-2/6 w-5/6">
         {isLoading && (
           <>
             <div className="flex justify-center mb-4">
