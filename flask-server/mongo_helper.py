@@ -163,27 +163,54 @@ def list_courses(username):
     except Exception as e:
         return False
     
-def get_domain_files(course_name):
+def get_domain_files(username,course_name):
     domains_list = []
     try:
-        documents = list(db["uploaded_files"].find({"file":'null', "course_name": course_name}))
+        documents = list(db["courses"].find({"course_name": course_name}))
 
-        for doc in documents:
-            doc['_id'] = str(doc['_id'])   
-            domains_list.append(doc['domain_name'])
-        return domains_list
+        if(len(documents) > 0):
+            documents = list(db["courses"].find({"course_name": course_name, "user": username}))
+
+            if(len(documents) > 0):
+                documents = list(db["uploaded_files"].find({"file": "null","course_name": course_name}))
+                for doc in documents:
+                    doc['_id'] = str(doc['_id'])   
+                    domains_list.append(doc['domain_name'])
+                return domains_list
+            else:
+                return "403"
+        else:
+            return "404"
+        
     except Exception as e:
-        return False
+        return "False"
     
-def get_documents(course_name, domain_name):
+def get_documents(username,course_name, domain_name):
     try:
-        documents = list(db["uploaded_files"].find({"domain": domain_name, "course_name": course_name, "file": {"$ne": "null"}}))
-        # Convert ObjectId to string
-        for doc in documents:
-            doc['_id'] = str(doc['_id'])   
-        return documents
+        documents = list(db["courses"].find({"course_name": course_name}))
+
+        if(len(documents) > 0):
+            documents = list(db["courses"].find({"course_name": course_name, "user": username}))
+
+            if(len(documents) > 0):    
+                documents = list(db["uploaded_files"].find({"domain": domain_name, "course_name": course_name}))    
+
+                if(len(documents) > 0):
+                    documents = list(db["uploaded_files"].find({"domain": domain_name, "course_name": course_name, "file": {"$ne": "null"}}))
+                    # Convert ObjectId to string
+                    for doc in documents:
+                        doc['_id'] = str(doc['_id'])   
+                    return documents
+                else:
+                    return "404"
+
+            else:
+                return "403"
+        else:
+            return "404"
+
     except Exception as e:
-        return False
+        return "False"
 
 def get_chatlogs():
     try:

@@ -103,15 +103,32 @@ def get_containers(username):
     containers =  list_courses(username)
     return jsonify(containers), 201
 
-@app.route('/api/collections/<collection_name>/domains', methods=['GET'])
-def get_domains(collection_name):
-    domains = get_domain_files(collection_name)
-    return jsonify(domains), 201
+@app.route('/api/collections/<username>/<collection_name>/domains', methods=['GET'])
+def get_domains(username,collection_name):
+    domain_status = get_domain_files(username,collection_name)
 
-@app.route('/api/collections/<collection_name>/<domain_name>', methods=['GET'])
-def get_files(collection_name, domain_name):
-    documents = get_documents(collection_name, domain_name)
-    return jsonify(documents), 201
+    if domain_status == "403":
+       return jsonify({"message": "User is not authorised to access this page"}), 403
+    elif domain_status == "404":
+       return jsonify({"message": "This page is not available"}), 404
+    elif domain_status == "Flase":
+        return jsonify({"message": "Error fetch course domains"}), 500
+    else:
+        return jsonify(domain_status), 201
+
+@app.route('/api/collections/<username>/<collection_name>/<domain_name>', methods=['GET'])
+def get_files(username,collection_name, domain_name):
+    documents_status = get_documents(username,collection_name, domain_name)
+    print(documents_status)
+
+    if documents_status == "403":
+       return jsonify({"message": "User is not authorised to access this page"}), 403
+    elif documents_status == "404":
+       return jsonify({"message": "This page is not available"}), 404
+    elif documents_status == "Flase":
+        return jsonify({"message": "Error fetch course files"}), 500
+    else:
+        return jsonify(documents_status), 201
    
     
 @app.route('/api/<collection_name>/<domain_name>/createdocument', methods=['PUT'])

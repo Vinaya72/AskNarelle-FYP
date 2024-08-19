@@ -7,6 +7,7 @@ import DeletionPopup from "../components/courses/DeletionPopup";
 import { Suspense } from 'react';
 import { msalConfig } from "@/authConfig";
 import { PublicClientApplication} from "@azure/msal-browser";
+import withAuth from "../components/authentication/WithAuth";
 
 export const msalInstance = new PublicClientApplication(msalConfig);
 
@@ -98,10 +99,12 @@ function ManageKnowledgeBase(): JSX.Element {
   );
 }
 
+const AuthenticatedManageKnowledgeBase = withAuth(ManageKnowledgeBase);
+
 export default function KnowledgebaseManagementPage(): JSX.Element {
     return (
       <Suspense fallback={<div>Loading...</div>}>
-        <ManageKnowledgeBase />
+        <AuthenticatedManageKnowledgeBase/>
       </Suspense>
     );
   }

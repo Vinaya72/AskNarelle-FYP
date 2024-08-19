@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import {
   AuthenticatedTemplate,
   UnauthenticatedTemplate,
+  useIsAuthenticated
 } from "@azure/msal-react";
 import { MdWavingHand } from "react-icons/md";
 import SignInButton from './components/authentication/SignInButton';
@@ -21,44 +22,64 @@ const msalInstance = new PublicClientApplication(msalConfig);
 
 export default function Home() {
   const router = useRouter();
+  const isAuthenticated = useIsAuthenticated();
 
   const[totalUsers, setTotalUsers] = useState<number|undefined>();
   const[totalQueries,setTotalQueries] = useState<number|undefined>();
+  const [username, setUsername] = useState<string | undefined>();
+  const [greeting, setGreeting] = useState<string>("");
 
-  const accounts = msalInstance.getAllAccounts();
-  const username = accounts[0]?.username; 
+  useEffect(() => {
+    if (isAuthenticated) {
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length > 0) {
+        setUsername(accounts[0].username);
+      }
+    }
+  }, [isAuthenticated]);
+  useEffect(() => {
+    if (username) { 
+      fetch(`http://127.0.0.1:5000/chats/totalUsers/${username}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to fetch total users');
+          }
+          return response.json();
+        })
+        .then((totalUsers: number) => {
+          setTotalUsers(totalUsers);
+        })
+        .catch(error => {
+          console.error('Error fetching total users:', error);
+        });
+
+      fetch(`http://127.0.0.1:5000/chats/totalQueries/${username}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to fetch total queries');
+          }
+          return response.json();
+        })
+        .then((totalQueries: number) => {
+          setTotalQueries(totalQueries);
+        })
+        .catch(error => {
+          console.error('Error fetching total queries:', error);
+        });
+    }
+  }, [username]); 
 
 
   useEffect(() => {
-    fetch(`http://127.0.0.1:5000/chats/totalUsers/${username}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch total users');
-        }
-        return response.json();
-      })
-      .then((totalUsers: number) => {
-        setTotalUsers(totalUsers);
-      })
-      .catch(error => {
-        console.error('Error fetching total users:', error);
-      });
-
-      fetch(`http://127.0.0.1:5000/chats/totalQueries/${username}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Failed to fetch total queries');
-        }
-        return response.json();
-      })
-      .then((totalQueries: number) => {
-        setTotalQueries(totalQueries);
-      })
-      .catch(error => {
-        console.error('Error fetching total queries:', error);
-      });
-
-  }, [])
+    const currentHour = new Date().getHours();
+    if (currentHour < 12) {
+      setGreeting("Good Morning,");
+    } else if (currentHour >= 12 && currentHour < 18) {
+      setGreeting("Good Afternoon,");
+    } else {
+      setGreeting("Good Evening,");
+    }
+  }, []);
 
   return (
 <div>
@@ -66,13 +87,8 @@ export default function Home() {
     <div className='flex flex-col h-full px-12 mt-[8vh]'>
       <div className='flex flex-col sm:flex-row justify-between w-full mt-5'>
         <div className='flex flex-col'>
-          <div className='text-2xl font-nunito font-semibold'>Good Evening,</div>
+          <div className='text-2xl font-nunito font-semibold'>{greeting}</div>
           <div className='text-gray-400 font-nunito'>AskNarelle dashboard homepage</div>
-        </div>
-        <div className='flex'>
-          <div>
-            <SearchBar/>
-          </div>
         </div>
       </div>
       <div className= 'grid md:grid-cols-2 gap-4 mt-5'>
@@ -84,7 +100,7 @@ export default function Home() {
             </CardDataStats>
           </div>
           <div className='flex sm:justify-start justify-center'>
-              <CardDataStats title="Total number of queries" total={totalQueries} rate="0.95%" levelDown>
+              <CardDataStats title="Total queries" total={totalQueries} rate="0.95%" levelDown>
                 <div className="flex items-center justify-center rounded-full bg-gray-200 w-14 h-14">
                   <IoPeople size={30} color={'#2C3463'} />
                 </div>

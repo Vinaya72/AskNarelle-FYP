@@ -12,6 +12,11 @@ import FileMovementPopup from '../components/course_files/FileMovementPopup';
 import BlobDeletionPopup from '../components/course_files/BlobDeletionPopup';
 import { Suspense } from 'react';
 import FilesTable from '../components/course_files/FilesTable';
+import withAuth from "../components/authentication/WithAuth";
+import { msalConfig } from "@/authConfig";
+import { PublicClientApplication} from "@azure/msal-browser";
+import NotFoundPage from '../components/authentication/404';
+import ForbiddenPage from '../components/authentication/403';
 
 interface Document{
     _id: string;
@@ -26,6 +31,9 @@ interface Document{
     is_root_blob: string;
     course_name: string
 }
+
+export const msalInstance = new PublicClientApplication(msalConfig);
+
 function Fileslist(): JSX.Element{
     const [message, setMessage] = useState<Document[]>([]);
     const [showPopup, setShowPopup] = useState<boolean>(false);
@@ -42,10 +50,15 @@ function Fileslist(): JSX.Element{
     const[docId, setDocId] = useState<string>('');
     const[versionId, setVersionId] = useState<string>('');
     const[isRootBlob, setIsRootBlob] = useState<string>('');
+    const[authorised, setAuthorised] = useState<boolean>(true)
+    const[coursePresent, setCoursePresent] = useState<boolean>(true)
 
     const searchParams = useSearchParams();
     const collectionName = searchParams.get("course") || '';
     const domainName = searchParams.get("domain") || '';
+
+    const accounts = msalInstance.getAllAccounts();
+    const username = accounts[0]?.username; 
   
     const handleFileCreated = () => {
       setFileCreated(!fileCreated);
@@ -116,12 +129,20 @@ function Fileslist(): JSX.Element{
   
     useEffect(() => {
       // console.log("Document");
-        fetch(`http://127.0.0.1:5000/api/collections/${collectionName}/${domainName}`)
+        fetch(`http://127.0.0.1:5000/api/collections/${username}/${collectionName}/${domainName}`)
         .then(response => {
-          if (!response.ok) {
-            throw new Error('Failed to fetch collections');
+          if (response.status === 403) {
+            setAuthorised(false)
           }
-          return response.json();
+          else if(response.status === 404){
+            setCoursePresent(false)
+          }
+          else if (response.status === 500){
+            throw new Error('Failed to fetch course domains');
+          }
+          else{
+            return response.json();
+          }
         })
         .then((documents: Document[]) => {
           setMessage(documents);
@@ -131,7 +152,7 @@ function Fileslist(): JSX.Element{
         });
     }, [fileCreated, fileDeleted, collectionName, blobDeleted, fileMoved]); 
 
-    const filteredFiles = message.filter(document =>
+    const filteredFiles = message?.filter(document =>
       document?.name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   
@@ -139,15 +160,22 @@ function Fileslist(): JSX.Element{
     return (
       <main className="flex h-screen mt-[8vh] lg:mt-[0vh] flex-col p-10 sm:p-24 bg-gray-100">
         <div className="flex flex-row justify-between">
+          {
+            authorised && coursePresent &&
+          
         <div className="font-semibold relative w-10 text-xl font-nunito">
           {collectionName}
           <div className="absolute left-2 w-full h-1 bg-[#3C456C]"></div>
         </div>
+}
          <div>
-          {message.length > 0 &&  <button onClick={handleButtonClick} className="bg-[#2C3463] text-white py-2 px-4 rounded-lg font-normal transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-[#3C456C] font-nunito">Add New File</button>}
+          {authorised && coursePresent && message?.length > 0 &&  <button onClick={handleButtonClick} className="bg-[#2C3463] text-white py-2 px-4 rounded-lg font-normal transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-[#3C456C] font-nunito">Add New File</button>}
          </div>
         </div>
-        {message.length > 0 ? (
+        {
+          coursePresent ? (
+            authorised ? (
+        message?.length > 0 ? (
           <>
            <div className='flex items-center justify-center mt-5 sm:mt-0'>
            <div className="relative">
@@ -178,6 +206,10 @@ function Fileslist(): JSX.Element{
             </button>
           </div>
         </div>
+      )) : (
+        <ForbiddenPage/>
+      )) : (
+        <NotFoundPage/>
       )}
         {showPopup && <DocumentPopup onClose={handleClosePopup} onFileCreated={handleFileCreated} collectionName = {collectionName} domainName={domainName}/>}
         {showDeletionPopup && <FileDeletionPopup fileName={fileName} collectionName={collection} id={docId} onFileDeleted={handleFileDeleted} onClose={handleCloseDeletionPopup} domainName={domainName} version_id={versionId} is_root_blob={isRootBlob}/>}
@@ -187,10 +219,12 @@ function Fileslist(): JSX.Element{
     );
 };
 
+const AuthenticatedFilesList= withAuth(Fileslist);
+
 export default function FilePage(): JSX.Element {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <Fileslist />
+      <AuthenticatedFilesList/>
     </Suspense>
   );
 }

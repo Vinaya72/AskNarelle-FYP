@@ -114,8 +114,8 @@ const ChartFour: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-center">
-        <div className="sm:w-1/2 w-full px-8">
+      <div className="flex flex-wrap">
+        <div className="sm:w-1/3 w-full px-8">
           <div className="flex w-full items-center">
             <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#3C50E0]"></span>
             <p className="text-sm font-medium text-black">
@@ -123,7 +123,7 @@ const ChartFour: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="sm:w-1/2 w-full px-8">
+        <div className="sm:w-1/3 w-full px-8">
           <div className="flex w-full items-center">
             <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#6577F3]"></span>
             <p className="text-sm font-medium text-black">
@@ -131,7 +131,7 @@ const ChartFour: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="sm:w-1/2 w-full px-8">
+        <div className="sm:w-1/3 w-full px-8">
           <div className="flex w-full items-center">
             <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#0FADCF]"></span>
             <p className=" text-sm font-medium text-black">
@@ -139,7 +139,7 @@ const ChartFour: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="sm:w-1/2 w-full px-8">
+        <div className="sm:w-1/3 w-full px-8">
           <div className="flex w-full items-center">
             <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#3C50A1]"></span>
             <p className=" text-sm font-medium text-black">
@@ -147,7 +147,7 @@ const ChartFour: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="sm:w-1/2 w-full px-8">
+        <div className="sm:w-1/3 w-full px-8">
           <div className="flex w-full items-center">
             <span className="mr-2 block h-3 w-full max-w-3 rounded-full bg-[#8FD0EF]"></span>
             <p className=" text-sm font-medium text-black">

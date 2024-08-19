@@ -1,10 +1,13 @@
 import { msalInstance } from "@/app/_app";
+import { useRouter } from "next/navigation";
 
 export default function SignOutButton() {
+
+  const router = useRouter()
   const handleLogout = (logoutType: string) => {
     if (logoutType === "popup") {
-      msalInstance.logoutPopup().catch((e) => {
-        console.error(`logoutPopup failed: ${e}`);
+      msalInstance.logoutPopup().then(() => {
+        router.push("/")
       });
     } else if (logoutType === "redirect") {
       msalInstance.logoutRedirect().catch((e) => {

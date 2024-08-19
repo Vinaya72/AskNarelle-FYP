@@ -6,6 +6,13 @@ import { useSearchParams } from 'next/navigation';
 import DomainPopup from '../components/domains/DomainPopup';
 import DomainDeletionPopup from '../components/domains/DomainDeletionPopup';
 import { MdDriveFolderUpload } from "react-icons/md";
+import withAuth from "../components/authentication/WithAuth";
+import { msalConfig } from "@/authConfig";
+import { PublicClientApplication} from "@azure/msal-browser";
+import NotFoundPage from '../components/authentication/404';
+import ForbiddenPage from '../components/authentication/403';
+
+export const msalInstance = new PublicClientApplication(msalConfig);
 
 function DomainContent() {
 
@@ -16,9 +23,14 @@ function DomainContent() {
   const[domainName, setDomainName] = useState<string>('')
   const[showDeletionPopup, setShowDeletionPopup] = useState<boolean>(false);
   const[course, setCourse] = useState<string>('');
+  const[authorised, setAuthorised] = useState<boolean>(true)
+  const[coursePresent, setCoursePresent] = useState<boolean>(true)
 
   const searchParams = useSearchParams();
   const collectionName = searchParams.get("query") || '';
+
+  const accounts = msalInstance.getAllAccounts();
+  const username = accounts[0]?.username; 
 
   // const domains = ['Lectures', 'Tutorials', 'Labs'];
 
@@ -50,12 +62,20 @@ function DomainContent() {
 
   useEffect(() => {
     console.log(collectionName)
-    fetch(`http://127.0.0.1:5000/api/collections/${collectionName}/domains`)
+    fetch(`http://127.0.0.1:5000/api/collections/${username}/${collectionName}/domains`)
     .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to fetch domain');
+      if (response.status === 403) {
+        setAuthorised(false)
       }
-      return response.json();
+      else if(response.status === 404){
+        setCoursePresent(false)
+      }
+      else if (response.status === 500){
+        throw new Error('Failed to fetch course domains');
+      }
+      else{
+        return response.json();
+      }
     })
     .then((domains: string[]) => {
       setDomains(domains);
@@ -68,16 +88,22 @@ function DomainContent() {
   return (
     <main className="flex h-screen mt-[8vh] lg:mt-[0vh] flex-col p-10 sm:p-24 bg-gray-100">   
       <div className="flex flex-row justify-between">
+        {
+          authorised && coursePresent &&
+
       <div className="font-semibold relative w-10 text-xl font-nunito">
         Categories
         <div className="absolute left-2 w-full h-1 bg-[#2C3463]"></div>
       </div>
+}
        <div>
-       {domains.length > 0 && <button onClick={handleButtonClick} className="bg-[#2C3463] text-white py-2 px-4 rounded-lg font-normal transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-[#3C456C]">Add New Category</button>}
+       {authorised && coursePresent && domains?.length > 0 && <button onClick={handleButtonClick} className="bg-[#2C3463] text-white py-2 px-4 rounded-lg font-normal transition-transform duration-300 ease-in-out transform hover:scale-105 hover:bg-[#3C456C]">Add New Category</button>}
        </div>
       </div>
       {
-        domains.length > 0 ? (
+        coursePresent ? (
+           authorised ? (
+             domains?.length > 0 ? (
           <div className="flex flex-wrap mt-5">
             {domains.map((domain: string, index: number) => (
               <DomainCard key={index} courseName={collectionName} domainName={domain} onDomainDeleted={handlePressDelete}/>
@@ -93,6 +119,12 @@ function DomainContent() {
           </div>
         </div>
         )
+      ) : (
+          <ForbiddenPage/>
+        )
+      ) : (
+        <NotFoundPage/>
+      )
       }
      
       {showPopup && <DomainPopup onClose={handleClosePopup} onDomainCreated={handleDomainCreated} collectionName = {collectionName}/>}
@@ -101,10 +133,12 @@ function DomainContent() {
   );
 }
 
+const AuthenticatedDomainContent = withAuth(DomainContent);
+
 export default function DomainPage(): JSX.Element {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <DomainContent />
+      <AuthenticatedDomainContent/>
     </Suspense>
   );
 }
