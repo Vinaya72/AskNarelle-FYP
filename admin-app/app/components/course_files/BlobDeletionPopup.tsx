@@ -17,7 +17,7 @@ const BlobDeletionPopup: React.FC<BlobDeletionPopupProps> = ({fileName, collecti
 
   const handleBlobDelete = () => {
     setIsLoading(true);
-    fetch(`https://asknarelle-backend.azurewebsites.net/api/${collectionName}/${domainName}/deletedocument`, {
+    fetch(`https://adminapp-backend.azurewebsites.net/api/${collectionName}/${domainName}/deletedocument`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

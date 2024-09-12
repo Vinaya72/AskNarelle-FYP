@@ -49,7 +49,7 @@ function ManageKnowledgeBase(): JSX.Element {
 
 
   useEffect(() => {
-      fetch(`https://asknarelle-backend.azurewebsites.net/api/collections/${username}`)
+      fetch(`https://adminapp-backend.azurewebsites.net/api/collections/${username}`)
       .then(response => {
         if (!response.ok) {
           throw new Error('Failed to fetch collections');
@@ -93,7 +93,7 @@ function ManageKnowledgeBase(): JSX.Element {
       )
       }
       {showPopup && <Popup onClose={handleClosePopup} onCollectionCreated={handleCollectionCreated}/>}
-      {showDeletionPopup && <DeletionPopup onClose={handleCloseDeletionPopup} onCourseDeleted={handleCollectionDeleted} courseName= {collection}/>}
+      {showDeletionPopup && <DeletionPopup onClose={handleCloseDeletionPopup} onCourseDeleted={handleCollectionDeleted} courseName= {collection} username={username}/> }
 
     </main>
   );

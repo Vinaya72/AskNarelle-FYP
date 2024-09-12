@@ -16,7 +16,7 @@ const CourseCard: React.FC<CourseProps> = ({courseName, onCourseDeleted}) => {
   const[totalFiles, setTotalFiles] = useState<number>(0); 
 
   useEffect(() => {
-    fetch(`https://asknarelle-backend.azurewebsites.net/api/${courseName}/totalFiles`)
+    fetch(`https://adminapp-backend.azurewebsites.net/api/${courseName}/totalFiles`)
     .then(response => {
       if (!response.ok) {
         throw new Error('Failed to fetch collections');

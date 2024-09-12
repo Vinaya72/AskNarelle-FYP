@@ -40,7 +40,7 @@ export default function Home() {
   }, [isAuthenticated]);
   useEffect(() => {
     if (username) { 
-      fetch(`https://asknarelle-backend.azurewebsites.net/chats/totalUsers/${username}`)
+      fetch(`https://adminapp-backend.azurewebsites.net/chats/totalUsers/${username}`)
         .then(response => {
           if (!response.ok) {
             throw new Error('Failed to fetch total users');
@@ -54,7 +54,7 @@ export default function Home() {
           console.error('Error fetching total users:', error);
         });
 
-      fetch(`https://asknarelle-backend.azurewebsites.net/chats/totalQueries/${username}`)
+      fetch(`https://adminapp-backend.azurewebsites.net/chats/totalQueries/${username}`)
         .then(response => {
           if (!response.ok) {
             throw new Error('Failed to fetch total queries');

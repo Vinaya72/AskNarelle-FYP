@@ -129,7 +129,7 @@ function Fileslist({params} : {params: {domain: string, course: string}}): JSX.E
   
     useEffect(() => {
       // console.log("Document");
-        fetch(`https://asknarelle-backend.azurewebsites.net/api/collections/${username}/${collectionName}/${domainName}`)
+        fetch(`https://adminapp-backend.azurewebsites.net/api/collections/${username}/${collectionName}/${domainName}`)
         .then(response => {
           if (response.status === 403) {
             setAuthorised(false)
@@ -211,9 +211,9 @@ function Fileslist({params} : {params: {domain: string, course: string}}): JSX.E
       )) : (
         <NotFoundPage/>
       )}
-        {showPopup && <DocumentPopup onClose={handleClosePopup} onFileCreated={handleFileCreated} collectionName = {collectionName} domainName={domainName}/>}
-        {showDeletionPopup && <FileDeletionPopup fileName={fileName} collectionName={collection} id={docId} onFileDeleted={handleFileDeleted} onClose={handleCloseDeletionPopup} domainName={domainName} version_id={versionId} is_root_blob={isRootBlob}/>}
-        {showFileMovementPopup && <FileMovementPopup fileName={fileName} collectionName={collection} id={docId} onFileMoved={handleFileMoved} onClose={handleCloseFileMovementPopup} domainName={domainName} version_id={versionId}/>}
+        {showPopup && <DocumentPopup onClose={handleClosePopup} onFileCreated={handleFileCreated} collectionName = {collectionName} domainName={domainName} username={username}/>}
+        {showDeletionPopup && <FileDeletionPopup fileName={fileName} collectionName={collection} id={docId} onFileDeleted={handleFileDeleted} onClose={handleCloseDeletionPopup} domainName={domainName} version_id={versionId} is_root_blob={isRootBlob} username={username}/>}
+        {showFileMovementPopup && <FileMovementPopup fileName={fileName} collectionName={collection} id={docId} onFileMoved={handleFileMoved} onClose={handleCloseFileMovementPopup} domainName={domainName} version_id={versionId} username={username}/>}
         {showBlobDeletionPopup && <BlobDeletionPopup fileName={fileName} onBlobDeleted={handleBlobDeleted} id={docId} collectionName={collection} onClose={handleCloseBlobDeletePopup} domainName={domainName} version_id={versionId} is_root_blob={isRootBlob}/>}
       </main>
     );

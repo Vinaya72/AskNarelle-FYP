@@ -62,7 +62,7 @@ function DomainContent({params} : {params: {course: string}}) {
 
   useEffect(() => {
     console.log(collectionName)
-    fetch(`https://asknarelle-backend.azurewebsites.net/api/collections/${username}/${collectionName}/domains`)
+    fetch(`https://adminapp-backend.azurewebsites.net/api/collections/${username}/${collectionName}/domains`)
     .then(response => {
       if (response.status === 403) {
         setAuthorised(false)

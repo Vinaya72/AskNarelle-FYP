@@ -13,7 +13,7 @@ const DomainDeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDe
 
   const handleDelete = () => {
     setIsLoading(true)
-    fetch('https://asknarelle-backend.azurewebsites.net/api/deletedomain', {
+    fetch('https://adminapp-backend.azurewebsites.net/api/deletedomain', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',

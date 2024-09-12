@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify
 import os
 from flask_cors import CORS
-from mongo_helper import  create_document, delete_all_course_documents, delete_document,  get_documents, update_movement_document, get_chatlogs, upload_course, list_courses, upload_domain, get_domain_files, delete_domain_docs, get_course_files_count, get_domain_files_count, get_users_count, get_queries_count, get_queries_by_month, get_queries_by_course, get_user_sentiments, get_user_emotions
+from mongo_helper import  create_document, delete_all_course_documents, delete_document,  get_documents, update_movement_document, get_chatlogs, upload_course, list_courses, upload_domain, get_domain_files, delete_domain_docs, get_course_files_count, get_domain_files_count, get_users_count, get_queries_count, get_queries_by_month, get_queries_by_course, get_user_sentiments, get_user_emotions, get_ai_search_credentials
 from blob_storage_helper import createContainer, delete_blob_storage_container, upload_to_azure_blob_storage, delete_from_azure_blob_storage,delete_domain_virtual_folder, generate_sas_token
 from ai_search_helper import storeDocuments, moveToVectorStoreFunction,createIndexFucntion, delete_index_function, delete_embeddings_function
 from dotenv import load_dotenv
@@ -25,8 +25,10 @@ def storeInVectorStore():
     containername = data.get('containername')
     chunksize= int(data.get('chunksize'))
     overlap = int(data.get('overlap'))
+    endpointValue = data.get('endpoint')
+    apiValue = data.get('api')
 
-    store_status = storeDocuments(containername, chunksize, overlap)
+    store_status = storeDocuments(containername, chunksize, overlap, endpointValue, apiValue)
     if(store_status == "True"):
         return jsonify({"message": "Data loaded into vectorstore successfully"}), 201
     else:
@@ -42,8 +44,10 @@ def moveToVectorStore():
     chunksize= int(data.get('chunksize'))
     overlap = int(data.get('overlap'))
     filename = data.get('filename')
+    endpointValue = data.get('endpoint')
+    apiValue = data.get('api')
 
-    movement_status = moveToVectorStoreFunction(containername, domainname, versionid, chunksize, overlap, filename)
+    movement_status = moveToVectorStoreFunction(containername, domainname, versionid, chunksize, overlap, filename, endpointValue, apiValue)
     if movement_status:  
         return jsonify({"message": "Data moved into into vectorstore successfully"}), 201
     else:
@@ -54,7 +58,9 @@ def moveToVectorStore():
 def createIndex():
     data = request.json
     collection_name = data.get('collectionName')
-    create_index_status =  createIndexFucntion(collection_name)
+    endpoint = data.get('endpoint')
+    apiKey = data.get('api')
+    create_index_status =  createIndexFucntion(collection_name, endpoint, apiKey)
     if create_index_status:  
         return jsonify({"message": "Index created successfully"}), 201
     else:
@@ -66,6 +72,8 @@ def create_course():
     data = request.json
     collection_name = data.get('collectionName')
     username = data.get('username')
+    endpointValue = data.get('endpoint')
+    apiValue = data.get('api')
 
     collection_name = collection_name.lower().replace(' ', '-')
     if not collection_name:
@@ -73,7 +81,7 @@ def create_course():
     try:
         create_success_container = createContainer(collection_name)
         if create_success_container:
-                uploaded_course = upload_course(collection_name, username)
+                uploaded_course = upload_course(collection_name, username, endpointValue, apiValue)
                 if uploaded_course:
                     return jsonify({"message": "Container and course created successfully!"}), 201
                 else:
@@ -263,8 +271,10 @@ def delete_file(collection_name, domain_name):
 def DeleteEmbeddings(collection_name):
     data = request.json
     blobName = data.get('fileName')
+    endpointValue = data.get("endpoint")
+    apiValue = data.get("api")
 
-    embeddings_delete_status = delete_embeddings_function(blobName, collection_name)
+    embeddings_delete_status = delete_embeddings_function(blobName, collection_name, endpointValue, apiValue)
     
     if embeddings_delete_status:  
         return jsonify({"message": "Embeddings deleted successfully"}), 201
@@ -277,8 +287,10 @@ def delete_index():
     data = request.json
     collection_name = data.get('collectionName')
     collection_name = collection_name.lower().replace(' ', '-')
+    endpointValue = data.get("endpoint")
+    apiValue = data.get("api")
 
-    index_deletion_status = delete_index_function(collection_name)
+    index_deletion_status = delete_index_function(collection_name, endpointValue, apiValue)
 
     if index_deletion_status:  
         return jsonify({"message": "Index deleted successfully"}), 201
@@ -375,8 +387,13 @@ def getUserEmotions(username):
     else:
         return user_emotions, 201
 
-
-
+@app.route('/aiSearchCredentials/<username>/<course_name>', methods=['GET'])
+def getAISearchCredentials(username, course_name):
+    result = get_ai_search_credentials(username, course_name)
+    if result:
+       return result, 201
+    else:
+       return jsonify({'message': 'Failed to fetch credentials'}), 500
 
 
 if __name__ == "__main__":

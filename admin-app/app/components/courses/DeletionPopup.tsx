@@ -1,18 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Oval } from 'react-loader-spinner';
 
 interface DeletionPopupProps {
   onClose: () => void;
   onCourseDeleted: () => void;
-  courseName: string
+  courseName: string;
+  username: string
 }
 
-const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted, courseName}) => {
+interface AiSearchCredential{
+  endpoint: string;
+  api: string
+}
+
+
+const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted, courseName, username}) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const[endpointValue, setEndpointValue] = useState<string>('');
+  const[apiValue, setApiValue] = useState<string>('');
+
+  useEffect(() => {
+    fetch(`https://adminapp-backend.azurewebsites.net/aiSearchCredentials/${username}/${courseName}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch collections');
+      }
+      return response.json();
+    })
+    .then((credendial: AiSearchCredential) => {
+        setEndpointValue(credendial.endpoint)
+        setApiValue(credendial.api)
+    })
+  }, [username, courseName])
 
   const handleDelete = () => {
     setIsLoading(true)
-    fetch('https://asknarelle-backend.azurewebsites.net/api/dropcollection', {
+    fetch('https://adminapp-backend.azurewebsites.net/api/dropcollection', {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -21,12 +44,13 @@ const DeletionPopup: React.FC<DeletionPopupProps> = ({ onClose, onCourseDeleted,
     })
     .then(response => {
       if (response.status === 201) {
-        return  fetch('https://asknarelle-backend.azurewebsites.net/api/dropIndex', {
+        return  fetch('https://adminapp-backend.azurewebsites.net/api/dropIndex', {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ collectionName: courseName }),
+          body: JSON.stringify({ collectionName: courseName, endpoint: endpointValue,
+            api: apiValue }),
         });
       } else if(!response.ok) {
         console.error('Failed to delete index');

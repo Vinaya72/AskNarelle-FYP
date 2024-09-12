@@ -23,11 +23,13 @@ db = client['file_database']
 chatlogs_db = chat_client['chathistory-storage']
 
 
-def upload_course(course_name, username):
+def upload_course(course_name, username, endpointValue, apiValue):
     try:
         doc = {
            "course_name": course_name,
-           "user": username
+           "user": username,
+           "endpoint": endpointValue,
+           "api": apiValue
         }
         
         db["courses"].update_one(
@@ -51,6 +53,7 @@ def delete_all_course_documents(course_name):
         db["courses"].delete_one({
             "course_name": course_name
         })
+        client.drop_database(course_name)
         return True
     except Exception as e:
         return False
@@ -499,6 +502,18 @@ def get_user_emotions(username):
     except Exception as e:
         print(e)
         return "False"
+
+def get_ai_search_credentials(username, course):
+    try:
+        document = db["courses"].find_one({"user": username, "course_name": course})
+        # Convert ObjectId to string
+        aiSearchCredentials = {
+            "endpoint": document.get("endpoint"),
+            "api": document.get("api")
+        }
+        return aiSearchCredentials
+    except Exception as e:
+        return False
 
  
 

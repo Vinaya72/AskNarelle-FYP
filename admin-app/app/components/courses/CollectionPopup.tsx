@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { IoIosCloseCircleOutline } from "react-icons/io";
 import { Oval } from 'react-loader-spinner';
 import { AccountInfo } from '@azure/msal-browser';
@@ -19,53 +19,117 @@ const Popup: React.FC<PopupProps> = ({ onClose, onCollectionCreated}) => {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const accounts = msalInstance.getAllAccounts();
   const username = accounts[0].username;
+  const[endpointValue, setEndpointValue] = useState<string>('');
+  const[apiValue, setApiValue] = useState<string>('');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
     setErrorMessage(''); // Clear the error message when the input changes
   };
 
-  const handleSubmit = () => {
-    setIsLoading(true);
-    setContainerExsists(false);
-    fetch('https://asknarelle-backend.azurewebsites.net/api/createcollection', {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ collectionName: inputValue, username: username }),
-    })
-    .then(response => {
-      if (response.ok) {
-        return fetch('https://asknarelle-backend.azurewebsites.net/createindex', {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ collectionName: inputValue })
-        });
-      } else {
-        setContainerExsists(true);
-        setErrorMessage('This course code is already in the database. Try again with a different course code.');
-        throw new Error('Failed to create container');
-      }
-    })
-    .then(flaskResponse => {
-      if (flaskResponse.ok) {
-        console.log('Index created successfully');
-        onCollectionCreated(); // Call the callback if everything is successful
-        onClose(); // Close the popup
-      } else {
-        throw new Error('Failed to create index');
-      }
-    })
-    .catch(error => {
-      console.error('Error creating index:', error);
-    })
-    .finally(() => {
-      setIsLoading(false);
-    });
+  const handleEndpointChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEndpointValue(e.target.value);
   };
+
+  const handleApiChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setApiValue(e.target.value);
+  };
+
+  // const handleSubmit = () => {
+  //   setIsLoading(true);
+  //   setContainerExsists(false);
+  //   fetch('http://localhost:5000/api/createcollection', {
+  //     method: 'PUT',
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify({ collectionName: inputValue, username: username,endpoint: endpointValue, api: apiValue }),
+  //   })
+  //   .then(response => {
+  //     if (response.ok) {
+  //       return fetch('http://localhost:5000/createindex', {
+  //         method: 'PUT',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         body: JSON.stringify({ collectionName: inputValue, endpoint: endpointValue, api: apiValue })
+  //       });
+  //     } else {
+  //       setContainerExsists(true);
+  //       setErrorMessage('This course code is already in the database. Try again with a different course code.');
+  //       throw new Error('Failed to create container');
+  //     }
+  //   })
+  //   .then(flaskResponse => {
+  //     if (flaskResponse.ok) {
+  //       console.log('Index created successfully');
+  //       onCollectionCreated(); // Call the callback if everything is successful
+  //       onClose(); // Close the popup
+  //     } else {
+  //       throw new Error('Failed to create index');
+  //     }
+  //   })
+  //   .catch(error => {
+  //     console.error('Error creating index:', error);
+  //   })
+  //   .finally(() => {
+  //     setIsLoading(false);
+  //   });
+  // };
+
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true);
+      setContainerExsists(false);
+  
+      // Step 1: Create the index
+      const indexResponse = await fetch('https://adminapp-backend.azurewebsites.net/createindex', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ collectionName: inputValue, endpoint: endpointValue, api: apiValue })
+      });
+  
+      if (!indexResponse.ok) {
+        setErrorMessage('Failed to create AI search index');
+        return; // Stop execution if index creation fails
+      }
+  
+      // Step 2: Create the collection
+      const collectionResponse = await fetch('https://adminapp-backend.azurewebsites.net/api/createcollection', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ collectionName: inputValue, username: username, endpoint: endpointValue, api: apiValue })
+      });
+  
+      if (!collectionResponse.ok) {
+        const errorData = await collectionResponse.json();
+        if (errorData.message === 'Collection already exists') {
+          setContainerExsists(true);
+          setErrorMessage('This course code is already in the database. Try again with a different course code.');
+        } else {
+          setErrorMessage('Failed to create collection');
+        }
+        return;
+      }
+  
+      // Success: Call necessary functions
+      console.log('Collection created successfully');
+      onCollectionCreated();
+      onClose(); // Close the popup
+  
+    } catch (error) {
+      console.error('Error occurred:', error);
+      setErrorMessage('An unexpected error occurred. Please try again later.');
+    } finally {
+      setIsLoading(false); // Ensure loading state is reset no matter what
+    }
+  };
+  
+
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
@@ -105,7 +169,27 @@ const Popup: React.FC<PopupProps> = ({ onClose, onCollectionCreated}) => {
               className="border border-gray-300 rounded-md px-4 py-2 mb-4 w-full"
               placeholder="Enter your input"
             />
-            {containerExsists && (
+              <label htmlFor="textInput" className="block mb-2 text-gray-800 font-semibold mt-4">Azure AI Search Endpoint</label>
+          <input
+            type="text"
+            id="textInput"
+            value={endpointValue}
+            onChange={handleEndpointChange}
+            className="border border-gray-300 rounded-md px-4 py-2 mb-4 w-full"
+            placeholder="Enter the endpoint"
+          />
+
+          <label htmlFor="textInput" className="block mb-2 text-gray-800 font-semibold mt-4">Azure AI Search API Key</label>
+          <input
+            type="text"
+            id="textInput"
+            value={apiValue}
+            onChange={handleApiChange}
+            className="border border-gray-300 rounded-md px-4 py-2 mb-4 w-full"
+            placeholder="Enter the api key"
+          />
+       
+            {errorMessage !== ''  && (
               <p className="text-red-500 text-sm mb-4 font-nunito">{errorMessage}</p>
             )}
             <button

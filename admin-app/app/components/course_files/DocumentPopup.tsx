@@ -8,11 +8,17 @@ import 'rc-slider/assets/index.css';
 interface PopupProps {
   onClose: () => void;
   onFileCreated: () => void;
-  collectionName: string
-  domainName: string
+  collectionName: string;
+  domainName: string;
+  username: string;
 }
 
-const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectionName, domainName}) => {
+interface AiSearchCredential{
+   endpoint: string;
+   api: string
+}
+
+const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectionName, domainName, username}) => {
   // const [inputValue, setInputValue] = useState('');
   const [files, setFiles] = useState<FileList | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -23,6 +29,9 @@ const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectio
   const[progress, setProgress] = useState<string>('');
   const[inValid, setIsInValid] = useState<boolean>(false);
   const[uploadSuccess, setUploadSuccess] = useState<boolean>(false);
+  const[endpointValue, setEndpointValue] = useState<string>('');
+  const[apiValue, setApiValue] = useState<string>('');
+
 
 
   // const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +70,8 @@ const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectio
     }
   }
 
+ 
+
   const handleSubmit = async (e:FormEvent) => {
     e.preventDefault();
     setIsLoading(true)
@@ -75,14 +86,14 @@ const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectio
     // formData.append('chunkSize', chunkSize.toString())
     // formData.append('overlap', overlap.toString())
     setProgress('Uploading To File Storage')
-    fetch(`https://asknarelle-backend.azurewebsites.net/api/${collectionName}/${domainName}/createdocument`, {
+    fetch(`https://adminapp-backend.azurewebsites.net/api/${collectionName}/${domainName}/createdocument`, {
           method: 'PUT',
            body: formData
       })
     .then(response => {
         if (response.ok) {
           setProgress('Uploading To Vector Store')
-          return fetch('https://asknarelle-backend.azurewebsites.net/vectorstore', {
+          return fetch('https://adminapp-backend.azurewebsites.net/vectorstore', {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
@@ -90,7 +101,9 @@ const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectio
             body: JSON.stringify({ 
               containername: collectionName,
               chunksize: chunkSize,
-              overlap: overlap
+              overlap: overlap,
+              endpoint: endpointValue,
+              api: apiValue
              })
           })
           .then(flaskResponse => {
@@ -117,71 +130,20 @@ const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectio
       onFileCreated(); 
     });
   };
-
-  // const handleSubmit = async (e: FormEvent) => {
-  //   e.preventDefault();
-  //   setIsLoading(true);
-  
-  //   if (!files) {
-  //     alert('Please upload the course materials');
-  //     setIsLoading(false);
-  //     return;
-  //   }
-  
-  //   const formData = new FormData();
-  //   Array.from(files).forEach((file) => formData.append('files', file));
-  
-  //   setProgress('Uploading To File Storage');
-  //   fetch(`https://asknarelle-backend.azurewebsites.net/api/${collectionName}/${domainName}/createdocument`, {
-  //       method: 'PUT',
-  //       body: formData,
-  //     })
-  //     .then(
-  //       response => {
-  //         if(response.ok){
-  //           setProgress('Uploading To Vector Store');
-  //           fetch('http://localhost:5000/vectorstore', {
-  //             method: 'PUT',
-  //             headers: {
-  //               'Content-Type': 'application/json',
-  //             },
-  //             body: JSON.stringify({
-  //               containername: collectionName,
-  //               chunksize: chunkSize,
-  //               overlap: overlap,
-  //           }),
-  //         })
-  //         .then(
-  //             flaskResponse => {
-  //               if (flaskResponse.ok) {  
-  //                 console.log('Data loaded into vectorstore successfully');
-  //                 setUploadSuccess(true);
-  //               } else {
-  //                 const flaskData = await flaskResponse.json(); 
-  //                 const flaskMessage = flaskData.message; // Await the error message
-  //                 alert(`Internal Server Error: ${flaskMessage}, Details: ${flaskMessage}`);
-  //                 throw new Error(`Failed to load into vector store: ${flaskMessage}`);
-  //               }
-  //             } 
-  //         )
-  //       }
-  //       else if(!response.ok) {
-  //         console.error('Failed to upload document');
-  //       }
-  //       else if (response.status === 400) {
-  //         setIsInValid(true);
-  //       } 
-  //     })
-  //     .catch(error => {
-  //       console.error('Error uploading document:', error);
-  //     })
-  //     .finally (() => {
-  //       setIsLoading(false);
-  //       onFileCreated();
-
-  //     })
        
-  
+  useEffect(() => {
+    fetch(`https://adminapp-backend.azurewebsites.net/aiSearchCredentials/${username}/${collectionName}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch collections');
+      }
+      return response.json();
+    })
+    .then((credendial: AiSearchCredential) => {
+        setEndpointValue(credendial.endpoint)
+        setApiValue(credendial.api)
+    })
+  }, [username, collectionName])
 
   useEffect(() => {
     if (uploadSuccess) {
@@ -251,15 +213,16 @@ const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectio
               </div>
             )}
         </div>
-          <label htmlFor="checkbox" className="text-gray-800 font-semibold mr-2 mt-4">Change default chunk size and overlap</label>
+       
+          {/* <label htmlFor="checkbox" className="text-gray-800 font-semibold mr-2 mt-4">Change default chunk size and overlap</label>
           <input
             type="checkbox"
             id="checkbox"
             checked={tick}
             onChange={handleCheckboxChange}
           />
-          <p className='text-red-500'> The default chunk size is set to 1000 and overlap is 100</p>
-
+          <p className='text-red-500'> The default chunk size is set to 1000 and overlap is 100</p> */}
+{/* 
             {
               showSliders && (
                 <>
@@ -299,7 +262,7 @@ const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectio
              </div>
              </>
               )
-            }
+            } */}
             <div>
             <button
           onClick={handleSubmit}
@@ -320,3 +283,66 @@ const DocumentPopup: React.FC<PopupProps> = ({ onClose, onFileCreated, collectio
 };
 
 export default DocumentPopup;
+
+ // const handleSubmit = async (e: FormEvent) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+  
+  //   if (!files) {
+  //     alert('Please upload the course materials');
+  //     setIsLoading(false);
+  //     return;
+  //   }
+  
+  //   const formData = new FormData();
+  //   Array.from(files).forEach((file) => formData.append('files', file));
+  
+  //   setProgress('Uploading To File Storage');
+  //   fetch(`https://asknarelle-backend.azurewebsites.net/api/${collectionName}/${domainName}/createdocument`, {
+  //       method: 'PUT',
+  //       body: formData,
+  //     })
+  //     .then(
+  //       response => {
+  //         if(response.ok){
+  //           setProgress('Uploading To Vector Store');
+  //           fetch('http://localhost:5000/vectorstore', {
+  //             method: 'PUT',
+  //             headers: {
+  //               'Content-Type': 'application/json',
+  //             },
+  //             body: JSON.stringify({
+  //               containername: collectionName,
+  //               chunksize: chunkSize,
+  //               overlap: overlap,
+  //           }),
+  //         })
+  //         .then(
+  //             flaskResponse => {
+  //               if (flaskResponse.ok) {  
+  //                 console.log('Data loaded into vectorstore successfully');
+  //                 setUploadSuccess(true);
+  //               } else {
+  //                 const flaskData = await flaskResponse.json(); 
+  //                 const flaskMessage = flaskData.message; // Await the error message
+  //                 alert(`Internal Server Error: ${flaskMessage}, Details: ${flaskMessage}`);
+  //                 throw new Error(`Failed to load into vector store: ${flaskMessage}`);
+  //               }
+  //             } 
+  //         )
+  //       }
+  //       else if(!response.ok) {
+  //         console.error('Failed to upload document');
+  //       }
+  //       else if (response.status === 400) {
+  //         setIsInValid(true);
+  //       } 
+  //     })
+  //     .catch(error => {
+  //       console.error('Error uploading document:', error);
+  //     })
+  //     .finally (() => {
+  //       setIsLoading(false);
+  //       onFileCreated();
+
+  //     })

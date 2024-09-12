@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Oval } from 'react-loader-spinner';
 
 interface FileDeletionPopupProps {
@@ -9,15 +9,37 @@ interface FileDeletionPopupProps {
     version_id: string,
     is_root_blob: string,
     onFileDeleted: () => void;
-    onClose: () => void
+    onClose: () => void;
+    username: string;
 }
 
-const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collectionName, id, onFileDeleted, onClose, domainName, version_id, is_root_blob}) => {
+interface AiSearchCredential{
+  endpoint: string;
+  api: string
+}
+
+const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collectionName, id, onFileDeleted, onClose, domainName, version_id, is_root_blob, username}) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const[endpointValue, setEndpointValue] = useState<string>('');
+  const[apiValue, setApiValue] = useState<string>('');
+
+  useEffect(() => {
+    fetch(`https://adminapp-backend.azurewebsites.net/aiSearchCredentials/${username}/${collectionName}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch collections');
+      }
+      return response.json();
+    })
+    .then((credendial: AiSearchCredential) => {
+        setEndpointValue(credendial.endpoint)
+        setApiValue(credendial.api)
+    })
+  }, [username, collectionName])
 
   const handleDelete = () => {
     setIsLoading(true);
-    fetch(`https://asknarelle-backend.azurewebsites.net/api/${collectionName}/deleteembeddings`, {
+    fetch(`https://adminapp-backend.azurewebsites.net/api/${collectionName}/deleteembeddings`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -25,12 +47,15 @@ const FileDeletionPopup: React.FC<FileDeletionPopupProps> = ({fileName, collecti
       body: JSON.stringify(
         { 
         _id: id, 
-        fileName: fileName }
+        fileName: fileName,
+        endpoint: endpointValue,
+        api: apiValue
+       }
         ),
     })
     .then(response => {
       if (response.status === 201) {
-        return fetch(`https://asknarelle-backend.azurewebsites.net/api/${collectionName}/${domainName}/deletedocument`, {
+        return fetch(`https://adminapp-backend.azurewebsites.net/api/${collectionName}/${domainName}/deletedocument`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json',

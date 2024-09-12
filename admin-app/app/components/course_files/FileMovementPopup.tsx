@@ -1,4 +1,4 @@
-import { useState , ChangeEvent} from 'react';
+import { useState , ChangeEvent, useEffect} from 'react';
 import { Oval } from 'react-loader-spinner';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
@@ -9,20 +9,43 @@ interface FileMovementPopupProps {
     domainName: string,
     id: string,
     version_id: string,
-    onFileMoved: () => void;
-    onClose: () => void
+    onFileMoved: () => void,
+    onClose: () => void,
+    username: string
 }
 
-const FileMovementPopup: React.FC<FileMovementPopupProps> = ({fileName, collectionName, id, onFileMoved, onClose, domainName, version_id}) => {
+interface AiSearchCredential{
+  endpoint: string;
+  api: string
+}
+
+const FileMovementPopup: React.FC<FileMovementPopupProps> = ({fileName, collectionName, id, onFileMoved, onClose, domainName, version_id, username}) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const[showSliders, setShowSliders] = useState<boolean>(false);
   const[tick, setTick] = useState<boolean>(false);
   const[chunkSize, setChunkSize] = useState<number>(1000);
   const[overlap, setOverlap] = useState<number>(100);
+  const[endpointValue, setEndpointValue] = useState<string>('');
+  const[apiValue, setApiValue] = useState<string>('');
+
+
+  useEffect(() => {
+    fetch(`https://adminapp-backend.azurewebsites.net/aiSearchCredentials/${username}/${collectionName}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch collections');
+      }
+      return response.json();
+    })
+    .then((credendial: AiSearchCredential) => {
+        setEndpointValue(credendial.endpoint)
+        setApiValue(credendial.api)
+    })
+  }, [username, collectionName])
 
   const handleFileMovement = () => {
     setIsLoading(true);
-    fetch(`https://asknarelle-backend.azurewebsites.net/movetovectorstore`, {
+    fetch(`https://adminapp-backend.azurewebsites.net/movetovectorstore`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -34,13 +57,15 @@ const FileMovementPopup: React.FC<FileMovementPopupProps> = ({fileName, collecti
         versionid: version_id,
         filename: fileName,
         chunksize: chunkSize,
-        overlap: overlap
+        overlap: overlap,
+        endpoint: endpointValue,
+        api: apiValue
      }
         ),
     })
     .then(response => {
       if (response.status === 201) {
-        return fetch(`https://asknarelle-backend.azurewebsites.net/updatemovement`, {
+        return fetch(`https://adminapp-backend.azurewebsites.net/updatemovement`, {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json',
